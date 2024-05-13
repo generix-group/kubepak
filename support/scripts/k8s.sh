@@ -230,6 +230,24 @@ k8s_secret_create_docker_registry() {
     kubectl create secret docker-registry -n "${__namespace}" "${__secret_name}" --docker-server="${__docker_server}" --docker-username="${__docker_username}" --docker-password="${__docker_password}"
 }
 
+k8s_secret_create_from_file() {
+    local __namespace="${1}"
+    local __secret_name="${2}"
+    local __secret_type="${3}"
+    local __key="${4}"
+    local __file_path="${5}"
+
+    kubectl create secret "${__secret_type}" -n "${__namespace}" "${__secret_name}" --from-file="${__key}"="${__file_path}" --dry-run=client -o yaml | kubectl apply -f -
+
+    local -A __std_labels=(
+        ["app.kubernetes.io/name"]="${__secret_name}"
+        ["app.kubernetes.io/part-of"]="${ORGANIZATION}.${PROJECT}"
+        ["app.kubernetes.io/managed-by"]="kubepak"
+    )
+
+    k8s_label "${__namespace}" "secret" "${__secret_name}" "__std_labels"
+}
+
 k8s_secret_create_sa_token() {
     local __namespace="${1}"
     local __secret_name="${2}"
