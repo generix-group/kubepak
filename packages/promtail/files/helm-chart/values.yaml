@@ -1,0 +1,11 @@
+packages:
+  promtail:
+    image:
+      registry:
+      repository:
+      tag:
+    clients:
+      - url: http://loki-gateway.dev-genx-infra-loki.svc.cluster.local
+        tenantName: loki
+    logModifications:
+      drops: []
