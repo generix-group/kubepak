@@ -16,6 +16,7 @@ packages:
         affinity: {}
         container:
           resources: {}
+      resourcesPreset:
     secondary:
       maxAllowedPacket:
       persistence:

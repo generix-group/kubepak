@@ -69,6 +69,10 @@ spec:
         extraFlags:
           - --tlsAllowConnectionsWithoutCertificates
         {{- end }}
+        {{- if hasKey .Values.packages "cilium" }}
+        networkPolicy:
+          enabled: false
+        {{- end }}
   destination:
     server: {{ .Values.kubernetes.server }}
     namespace: {{ .Release.Namespace }}

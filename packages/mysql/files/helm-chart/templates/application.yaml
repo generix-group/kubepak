@@ -59,6 +59,9 @@ spec:
             {{- toYaml .Values.packages.mysql.primary.pod.affinity | nindent 12 }}
           resources:
             {{- toYaml .Values.packages.mysql.primary.pod.container.resources | nindent 12 }}
+          {{- if .Values.packages.mysql.primary.resourcesPreset }}
+          resourcesPreset: {{ .Values.packages.mysql.primary.resourcesPreset }}
+          {{- end }}
         secondary:
           nodeSelector:
             {{- toYaml .Values.packages.mysql.secondary.pod.nodeSelector | nindent 12 }}

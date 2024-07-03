@@ -1,0 +1,49 @@
+{{- if hasKey .Values.packages "cilium" }}
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "prometheus-stack"
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpointSelector:
+    matchLabels:
+      release: prometheus-stack
+  egress:
+    - toServices:
+      - k8sService:
+          serviceName: prometheus-stack-coredns
+          namespace: kube-system
+    - toEntities:
+      - kube-apiserver
+    - toEndpoints:
+      - matchLabels:
+          release: prometheus-stack
+  ingress:
+    - fromEndpoints:
+      - matchLabels:
+          release: prometheus-stack
+        matchExpressions:
+          - key: io.kubernetes.pod.namespace
+            operator: Exists
+    - fromEndpoints:
+      - matchLabels:
+          prometheus: prometheus-stack-prometheus
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "prometheus-to-kube-dns-metrics"
+  namespace: kube-system
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+      - matchLabels:
+          prometheus: prometheus-stack-prometheus
+          io.kubernetes.pod.namespace: shr-prometheus-stack
+      toPorts:
+        - ports:
+          - port: "9153"
+            protocol: TCP
+{{- end }}

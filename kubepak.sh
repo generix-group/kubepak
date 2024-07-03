@@ -37,6 +37,7 @@ __opt_environment=""
 __opt_organization=""
 __opt_project=""
 __opt_context=""
+__opt_cilium_azure_resoure_group=""
 __opt_packages=()
 __opt_packages_to_ignore=()
 __opt_kvp=()
@@ -189,6 +190,10 @@ __config_file_parse() {
 
     if [[ -z "${__opt_context}" ]]; then
         __opt_context="$(yaml_read "${__opt_config_file}" ".context")"
+    fi
+
+    if [[ -z "${__opt_cilium_azure_resoure_group}" ]]; then
+        __opt_cilium_azure_resoure_group="$(yaml_read "${__opt_config_file}" ".ciliumAzureResoureGroup")"
     fi
 
     mapfile -t __tmp < <(yaml_read "${__opt_config_file}" ".packages[]")
@@ -606,6 +611,48 @@ __command_list() {
     done
 }
 
+__handle_cilium() {
+  if array_contains "cilium" "${__opt_packages[@]}"; then
+    if ! command -v cilium &> /dev/null; then
+      echo "Cilium-cli is not installed, trying to install."
+
+      CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+      CLI_ARCH=amd64
+      if [ "$(uname -m)" = "aarch64" ]; then CLI_ARCH=arm64; fi
+      curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/"${CILIUM_CLI_VERSION}"/cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+      sha256sum --check cilium-linux-${CLI_ARCH}.tar.gz.sha256sum
+      sudo tar xzvfC cilium-linux-${CLI_ARCH}.tar.gz /usr/local/bin
+      rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+
+      if ! command -v cilium &> /dev/null; then
+        echo "Unable to install Cilium-cli." && exit
+      fi
+      echo "Cilium-cli installed."
+    else
+      echo "Cilium-cli already installed."
+    fi
+
+    if [[ "$(cilium status -n shr-cilium -o json 2>/dev/null | jq .'errors.cilium')" != null ]]; then
+      version=$(awk -F '=' '/__CILIUM_CHART_VERSION/{gsub(/"/, "", $2); print $2; exit}' packages/cilium/cilium.sh)
+
+      resourceGroupOption=""
+      if [ -n "${__opt_cilium_azure_resoure_group}" ]; then
+        echo "Installing Cilium for Azure..."
+        resourceGroupOption="--set azure.resourceGroup=${__opt_cilium_azure_resoure_group}"
+      fi
+
+      kubectl create namespace shr-cilium --dry-run=client -o yaml | kubectl apply -f -
+      # shellcheck disable=SC2086
+      cilium install --version "$version" --namespace="shr-cilium" $resourceGroupOption
+    else
+      echo "Cilium already installed."
+    fi
+
+  else
+    echo "Cilium not in the configuration, skipping."
+  fi
+}
+
 #-----------------------------------------------------------------------------
 # main
 
@@ -632,6 +679,7 @@ main() {
     # Execute the specified command
     case "${__arg_command}" in
     "install" | "upgrade")
+        __handle_cilium
         __command_install_upgrade "${__arg_command}"
         ;;
     "list")

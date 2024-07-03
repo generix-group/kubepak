@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: network-probe-curl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: network-probe-curl
+  template:
+    metadata:
+      labels:
+        app: network-probe-curl
+    spec:
+      containers:
+        - name: network-probe-curl
+          image: appropriate/curl
+          command: ["sh", "-c", "while true; do sleep 3600; done"]

@@ -1,0 +1,36 @@
+{{- if hasKey .Values.packages "cilium" }}
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "argo-cd-network-policy"
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpointSelector:
+    matchLabels:
+      app: argocd-server
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: argocd-repo-server
+        - matchLabels:
+            app: argocd-dex-server
+    - toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app: argocd-repo-server
+        - matchLabels:
+            app: argocd-dex-server
+    - toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP
+{{- end }}

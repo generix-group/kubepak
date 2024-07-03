@@ -1,0 +1,150 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}
+  namespace: {{ index .Values "packages" "argo-cd" "namespace" }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.environment }}-{{ .Values.organization }}-{{ .Values.project }}
+  source:
+    repoURL: https://helm.cilium.io/
+    targetRevision: {{ .Values.packages.cilium.chartVersion }}
+    chart: cilium
+    helm:
+      parameters:
+        - name: name
+          value: "{{ .Release.Name }}"
+        {{- if .Values.packages.cilium.image.repository }}
+        - name: image.repository
+          value: "{{ .Values.packages.cilium.image.repository }}"
+        {{- end }}
+        {{- if .Values.packages.cilium.image.tag }}
+        - name: image.tag
+          value: "{{ .Values.packages.cilium.image.tag }}"
+        {{- end }}
+      values: |
+        aksbyocni:
+          enabled: true
+{{/*        cluster:*/}}
+{{/*          name: pataate*/}}
+{{/*          id: 0*/}}
+        ipam:
+          operator:
+{{/*            clusterPoolIPv4PodCIDRList: []*/}}
+            clusterPoolIPv4MaskSize: 24
+        envoy:
+          enabled: true
+        envoyConfig:
+          enabled: true
+        kubeProxyReplacement: true
+        loadBalancer:
+          l7:
+            backend: envoy
+        hubble:
+          {{- if .Values.packages.cilium.hubble.redact.enabled }}
+          redact:
+            enabled: true
+            http:
+              urlQuery: {{ .Values.packages.cilium.hubble.redact.httpUrlQuery }}
+              userInfo: {{ .Values.packages.cilium.hubble.redact.httpUserInfo }}
+              headers:
+                {{- if .Values.packages.cilium.hubble.redact.headers.allow }}
+                allow:
+                {{- range .Values.packages.cilium.hubble.redact.headers.allow }}
+                  - {{ . }}
+                {{- end }}
+                {{- else }}
+                allow: []
+                {{- end }}
+                {{- if .Values.packages.cilium.hubble.redact.headers.deny }}
+                deny:
+                {{- range .Values.packages.cilium.hubble.redact.headers.deny }}
+                  - {{ . }}
+                {{- end }}
+                {{- else }}
+                deny: []
+                {{- end }}
+            kafka:
+              apiKey: true
+          {{- end }}
+          peerService:
+            clusterDomain: cluster.local.
+          tls:
+            auto:
+              method: helm
+          metrics:
+            enableOpenMetrics: true
+            enabled:
+              - dns:query;ignoreAAAA
+              - drop:sourceContext=identity;destinationContext=identity
+              - tcp
+              - flow
+              - port-distribution
+              - icmp
+              - "httpV2:sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction"
+            dashboards:
+              enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+              labelValue: "grafana"
+              annotations:
+                grafana_folder: Cilium
+            serviceMonitor:
+              enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+              labels:
+                release: prometheus-stack
+          relay:
+            enabled: true
+            rollOutPods: true
+            prometheus:
+              enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+              serviceMonitor:
+                enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+                labels:
+                  release: prometheus-stack
+          ui:
+            enabled: true
+            rollOutPods: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+            labels:
+              release: prometheus-stack
+        dashboards:
+          enabled: true
+          labelValue: "grafana"
+          annotations:
+            grafana_folder: Cilium
+        operator:
+          prometheus:
+            serviceMonitor:
+              enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+              labels:
+                release: prometheus-stack
+          dashboards:
+            enabled: true
+            labelValue: "grafana"
+            annotations:
+              grafana_folder: Cilium
+        clustermesh:
+          useAPIServer: {{ .Values.packages.cilium.clustermesh.useAPIServer }}
+          apiserver:
+            metrics:
+              serviceMonitor:
+                enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+                labels:
+                  release: prometheus-stack
+  destination:
+    server: {{ .Values.kubernetes.server }}
+    namespace: {{ .Release.Namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+...

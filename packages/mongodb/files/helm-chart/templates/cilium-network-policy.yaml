@@ -1,0 +1,19 @@
+{{- if hasKey .Values.packages "cilium" }}
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "mongodb"
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+      - matchLabels:
+          app.kubernetes.io/component: mongodb
+          app.kubernetes.io/instance: mongodb
+          app.kubernetes.io/name: mongodb
+      toPorts:
+        - ports:
+          - port: "27017"
+            protocol: TCP
+{{- end }}

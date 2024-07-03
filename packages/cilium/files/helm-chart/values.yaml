@@ -1,0 +1,15 @@
+packages:
+  cilium:
+    image:
+      repository:
+      tag:
+    clustermesh:
+      useAPIServer: false
+    hubble:
+      redact:
+        enabled: false
+        httpUrlQuery: false
+        httpUserInfo: false
+        headers:
+          allow: []
+          deny: []

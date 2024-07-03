@@ -46,6 +46,13 @@ spec:
       values: |
         global:
           {{- include "common.registryCredentials.imagePullSecrets" (merge (dict "hasNameField" true) .) | nindent 10 }}
+        prometheusOperator:
+          networkPolicy:
+            enabled: true
+            flavor: {{ ternary "cilium" "kubernetes" (hasKey .Values.packages "cilium") }}
+        prometheus:
+          networkPolicy:
+            enabled: false
         grafana:
           "grafana.ini":
             server:
