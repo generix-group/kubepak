@@ -231,7 +231,14 @@ __command_options_validate() {
 
     local __package
     for __package in "${__opt_packages[@]}"; do
-        if [[ ! -e "${__SCRIPT_DIR}/packages/${__package}/${__package}.sh" ]]; then
+        __packages_path="${__SCRIPT_DIR}/"
+        if [[ "${__package}" =~ ${__opt_organization}-.* ]]; then
+            __packages_path+="${__opt_organization}-packages/"
+        else
+            __packages_path+="packages/"
+        fi
+        __packages_path+="${__package}/${__package}.sh"
+        if [[ ! -e "${__packages_path}" ]]; then
             log_error "package '${__package}' does not exist"
         fi
     done
@@ -364,16 +371,23 @@ __package_hook_execute() {
     local __package_prefix="${__package^^}"
     __package_prefix="${__package_prefix//-/_}"
 
+    __packages_path="${__SCRIPT_DIR}/"
+    if [[ "${__current_package}" =~ ${__opt_organization}-.* ]]; then
+        __packages_path+="${__opt_organization}-packages/"
+    else
+        __packages_path+="packages"
+    fi
+
     K8S_PACKAGE_NAME="$(cut -c1-63 <<<"${__package//_/-}")" \
     K8S_PACKAGE_NAMESPACE="$(yaml_read "${CACHE_CWD}/values.yaml" ".packages.${__package}.namespace")" \
     PACKAGE_CACHE_DIR="${CACHE_CWD}/${__package}" \
-    PACKAGE_DIR="${__SCRIPT_DIR}/packages/${__package_ipath##*.}" \
+    PACKAGE_DIR="${__packages_path}/${__package_ipath##*.}" \
     PACKAGE_IPATH="${__package_ipath}" \
     PACKAGE_NAME="${__package}" \
     PACKAGE_PREFIX="${__package_prefix}" \
     PACKAGE_VALUES_FILE_NAME="values-$(printf "%02d" "$(string_count_occurrences_of "${__package_ipath}" ".")")-$(shasum <<<"${__package_ipath}" | head -c 40).yaml" \
     VAULT_TOKEN="$(yaml_read "${CACHE_CWD}/values.yaml" ".packages.vault.rootToken")" \
-        "${__SCRIPT_DIR}/packages/${__current_package}/${__current_package}.sh" "${__hook}"
+        "${__packages_path}/${__current_package}/${__current_package}.sh" "${__hook}"
 }
 
 __package_option_get_values() {
@@ -385,6 +399,13 @@ __package_option_get_values() {
     local __package_prefix="${__package^^}"
     __package_prefix="${__package_prefix//-/_}"
 
+    __packages_path="${__SCRIPT_DIR}/"
+    if [[ "${__current_package}" =~ ${__opt_organization}-.* ]]; then
+        __packages_path+="${__opt_organization}-packages/"
+    else
+        __packages_path+="packages"
+    fi
+
     local __values __condition
     while IFS=";" read -r __values __condition; do
         local __value
@@ -393,7 +414,7 @@ __package_option_get_values() {
                 __values_ref+=("$(PACKAGE_NAME="${__package}" PACKAGE_PREFIX="${__package_prefix}" eval echo "${__value}")")
             fi
         done
-    done < <(sed -E -n "s/^[\t ]*#[ \t]*@package-option[ \t]+${__option}[ \t]*=[ \t]*\"(.*)\"([ \t]+\[(.*)\]|)/\1;\3/p" "${__SCRIPT_DIR}/packages/${__current_package}/${__current_package}.sh")
+    done < <(sed -E -n "s/^[\t ]*#[ \t]*@package-option[ \t]+${__option}[ \t]*=[ \t]*\"(.*)\"([ \t]+\[(.*)\]|)/\1;\3/p" "${__packages_path}/${__current_package}/${__current_package}.sh")
 }
 
 __package_dependency_get() {

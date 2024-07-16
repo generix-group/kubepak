@@ -3,6 +3,5 @@
 charts
 Chart.lock
 tmpcharts
-/packages/genx-solochain/
-/packages/genx-solochain-database/
-/packages/genx-common/
+/*-packages
+/packages/genx-*
