@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: rabbitmq-cluster-operator-unavailable-replicas
-  namespace: {{ .Values.environment }}-prometheus-stack
+  namespace: {{ index .Values "packages" "prometheus-stack" "namespace" }}
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
     app.kubernetes.io/instance: {{ .Release.Name }}

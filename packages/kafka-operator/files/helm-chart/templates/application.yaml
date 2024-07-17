@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
     app.kubernetes.io/managed-by: kubepak
   name: {{ .Release.Name }}
-  namespace: {{ .Values.environment }}-argo-cd
+  namespace: {{ index .Values "packages" "argo-cd" "namespace" }}
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

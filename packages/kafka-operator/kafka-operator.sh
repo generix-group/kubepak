@@ -24,6 +24,9 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 #-----------------------------------------------------------------------------
 # Package Options
 
+# @package-option attributes="final"
+# @package-option attributes="shared"
+
 # @package-option dependencies="argo-cd"
 
 #-----------------------------------------------------------------------------
