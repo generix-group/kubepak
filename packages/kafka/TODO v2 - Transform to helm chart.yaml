@@ -299,7 +299,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: kafka-resources-metrics
-  namespace: dev-prometheus-stack
+  namespace: shr-prometheus-stack
   labels:
     app: strimzi
     release: prometheus-stack
