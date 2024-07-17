@@ -32,7 +32,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 #-----------------------------------------------------------------------------
 # Private Constants
 
-readonly __KAFKA_OPERATOR_CHART_VERSION="0.40.0"
+readonly __KAFKA_OPERATOR_CHART_VERSION="0.42.0"
 
 #-----------------------------------------------------------------------------
 # Public Hooks
