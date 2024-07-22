@@ -1,0 +1,58 @@
+apiVersion: managedidentity.azure.upbound.io/v1beta1
+kind: UserAssignedIdentity
+metadata:
+  name: bentestidentity
+spec:
+  forProvider:
+    location: East US
+    name: bentestidentity
+    resourceGroupName: poc-crossplane
+  providerConfigRef:
+    name: crossplane-azure-provider
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-azure-storage
+spec:
+  package: xpkg.upbound.io/upbound/provider-azure-storage:v1.4.0
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-azure-authorization
+spec:
+  package: xpkg.upbound.io/upbound/provider-azure-authorization:v1.4.0
+---
+apiVersion: authorization.azure.upbound.io/v1beta1
+kind: RoleAssignment
+metadata:
+  name: roleassignbentest
+spec:
+  forProvider:
+    principalId: "3f607e6e-a4a3-483e-b0a7-fc62d0627860"
+    roleDefinitionName: Owner
+    scope: "/subscriptions/aa3ae2aa-9e5b-4e2b-b8e4-b7b42262cbb4/resourceGroups/poc-crossplane/providers/Microsoft.Storage/storageAccounts/examplewithidentity12345"
+  providerConfigRef:
+    name: crossplane-azure-provider
+---
+apiVersion: storage.azure.upbound.io/v1beta2
+kind: Account
+metadata:
+  name: examplewithidentity12346
+spec:
+  forProvider:
+    accountKind: StorageV2
+    accountReplicationType: GRS
+    accountTier: Standard
+    isHnsEnabled: false
+    location: East US
+    resourceGroupName: poc-crossplane
+    identity:
+      identityIds: ["/subscriptions/aa3ae2aa-9e5b-4e2b-b8e4-b7b42262cbb4/resourceGroups/poc-crossplane/providers/Microsoft.ManagedIdentity/userAssignedIdentities/bentestidentity"]
+      type: UserAssigned
+  providerConfigRef:
+    name: crossplane-azure-provider
+  writeConnectionSecretToRef:
+    name: secrettestben
+    namespace: default

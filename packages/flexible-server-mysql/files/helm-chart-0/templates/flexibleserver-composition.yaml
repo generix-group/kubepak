@@ -8,7 +8,6 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
     app.kubernetes.io/managed-by: kubepak
-  name: azure-mysql
   name: {{ .Release.Name }}-composition
   namespace: dev-flexible-server-mysql
 spec:

@@ -1,0 +1,91 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: azure-managedas.gpe.io
+spec:
+  group: gpe.io
+  names:
+    kind: azure-manageda
+    plural: azure-managedas
+  versions:
+    - name: v1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  properties:
+                    providerConfigRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                    writeConnectionSecretToRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                    forProvider:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                        name:
+                          type: string
+                        resourceGroupName:
+                          type: string
+                  required:
+                    - writeConnectionSecretToRef
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: ben-user-assigned
+spec:
+  compositeTypeRef:
+    apiVersion: gpe.io/v1
+    kind: azure-manageda
+  resources:
+    - name: UserAssignedCredentials
+      base:
+        apiVersion: managedidentity.azure.upbound.io/v1beta1
+        kind: UserAssignedIdentity
+        metadata:
+          name: managedidentity
+        spec:
+          writeConnectionSecretToRef:
+            name: ben-composition-secret
+            namespace: default
+          forProvider:
+            location: East US
+            name: bentestidentity2
+            resourceGroupName: poc-crossplane
+          providerConfigRef:
+            name: crossplane-azure-provider
+      connectionDetails:
+        - name: principalId
+          fromFieldPath: status.atProvider.principalId
+        - name: clientId
+          fromFieldPath: status.atProvider.clientId
+---
+apiVersion: gpe.io/v1
+kind: azure-manageda
+metadata:
+  name: ben-storage-composition-instance
+spec:
+  writeConnectionSecretToRef:
+    name: ben-test-secrets
+    namespace: default
+  parameters:
+    writeConnectionSecretToRef:
+      name: ben-azure-storage-secret
+      namespace: default

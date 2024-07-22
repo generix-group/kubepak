@@ -34,4 +34,16 @@ metadata:
   name: {{ .Release.Name }}-dbforpostgresql
 spec:
   package: xpkg.upbound.io/upbound/provider-azure-dbforpostgresql:v{{ index .Values "packages" "crossplane-azure-provider" "version" }}
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}-managedidentity
+spec:
+  package: xpkg.upbound.io/upbound/provider-azure-managedidentity:v{{ index .Values "packages" "crossplane-azure-provider" "version" }}
 ...
