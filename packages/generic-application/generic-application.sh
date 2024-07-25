@@ -182,7 +182,10 @@ hook_pre_install() {
 
             database_create_super_user "${__database_engine}" "${__database_hostname}" "${__database_port}" "${__database_local_options}" "${__database_auth_rootUsername}" "${__database_auth_rootPassword}" "vault-${__database_mode}" "will-be-rotated"
 
-            database_vault_configure "${__database_engine}" "${__database_name}" "${__database_hostname}" "${__database_port}" "${__vault_database_options}" "${__database_mode}" "vault-${__database_mode}" "will-be-rotated" "${__vault_database_default_ttl}" "${__vault_database_maximum_ttl}"
+            local __tls_ca_filepath
+            __tls_ca_filepath="$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.databases[$((__i - 1))].tls_ca_filepath" "")"
+
+            database_vault_configure "${__database_engine}" "${__database_name}" "${__database_hostname}" "${__database_port}" "${__vault_database_options}" "${__database_mode}" "vault-${__database_mode}" "will-be-rotated" "${__vault_database_default_ttl}" "${__vault_database_maximum_ttl}" "${__tls_ca_filepath}"
 
             package_cache_values_file_add ".packages.${PACKAGE_IPATH}.vaultAgent.db.template.dataSources" '[
               {

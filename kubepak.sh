@@ -275,13 +275,19 @@ __command_options_validate() {
 __cache_init() {
     local __packages=("${@}")
 
-    mkdir -p "${CACHE_CWD}"
+    mkdir -p "${CACHE_CWD}/ca"
 
     yaml_write "${CACHE_CWD}/values.yaml" ".kubernetes.server" "https://kubernetes.default.svc"
     yaml_write "${CACHE_CWD}/values.yaml" ".environment" "${__opt_environment}"
     yaml_write "${CACHE_CWD}/values.yaml" ".organization" "${__opt_organization}"
     yaml_write "${CACHE_CWD}/values.yaml" ".project" "${__opt_project}"
     yaml_write "${CACHE_CWD}/values.yaml" ".context" "${__opt_context}"
+
+    if [[ ,${CONTEXT}, =~ ,*-azure-database, ]]; then
+        wget -q -O "${CACHE_CWD}/ca/DigiCertGlobalRootCA.crt" https://cacerts.digicert.com/DigiCertGlobalRootCA.crt
+        openssl x509 -inform DER -in "${CACHE_CWD}/ca/DigiCertGlobalRootCA.crt" -out "${CACHE_CWD}/ca/DigiCertGlobalRootCA.pem" -outform PEM
+        yaml_write "${CACHE_CWD}/values.yaml" ".azure_db_ca" "${CACHE_CWD}/ca/DigiCertGlobalRootCA.pem"
+    fi
 
     local __kvp
     for __kvp in "${__opt_kvp[@]}"; do

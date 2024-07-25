@@ -41,6 +41,7 @@ __database_vault_configure() {
     local __rotation_statements="${12}"
     local __default_ttl="${13}"
     local __max_ttl="${14}"
+    local __tls_ca_filepath="${15}"
 
     if ! vault secrets list -format json | jq -e ".[\"database/\"]" >/dev/null; then
         vault secrets enable "database"
@@ -52,7 +53,8 @@ __database_vault_configure() {
             allowed_roles="${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}" \
             connection_url="${__connection_url}" \
             username="${__database_vault_username}" \
-            password="${__database_vault_password}"
+            password="${__database_vault_password}" \
+            tls_ca="@${__tls_ca_filepath}"
 
         vault write -force "database/rotate-root/${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}"
 

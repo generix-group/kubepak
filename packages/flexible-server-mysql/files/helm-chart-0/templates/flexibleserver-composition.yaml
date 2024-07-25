@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
     app.kubernetes.io/managed-by: kubepak
   name: {{ .Release.Name }}-composition
-  namespace: dev-flexible-server-mysql
+  namespace: {{ .Release.Namespace }}
 spec:
   compositeTypeRef:
     apiVersion: database.example.com/v1alpha1
@@ -122,6 +122,10 @@ spec:
       value: "3306"
     name: mysqlinstance
     patches:
+    - fromFieldPath: metadata.annotations
+      toFieldPath: metadata.annotations
+    - fromFieldPath: metadata.labels
+      toFieldPath: metadata.labels
     - fromFieldPath: metadata.uid
       toFieldPath: spec.writeConnectionSecretToRef.name
       transforms:
@@ -140,7 +144,7 @@ spec:
     # change secret namespace to the one of the claim
     - fromFieldPath: "metadata.labels[crossplane.io/claim-namespace]"
       toFieldPath: "spec.writeConnectionSecretToRef.namespace"
-  writeConnectionSecretsToNamespace: dev-crossplane          # This will create a secret per composition with name `metadata.uid` in namespace `crossplane-system`
+  writeConnectionSecretsToNamespace: {{ .Release.Namespace }}          # This will create a secret per composition with name `metadata.uid` in namespace `crossplane-system`
 ---
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition

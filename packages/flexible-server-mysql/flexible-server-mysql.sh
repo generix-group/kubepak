@@ -20,11 +20,10 @@
 set -eo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/scripts/package.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/scripts/k8s.sh"
 
 #-----------------------------------------------------------------------------
 # Package Options
-
-# @package-option attributes="final"
 
 # @package-option dependencies="argo-cd"
 # @package-option dependencies="crossplane"
@@ -45,6 +44,9 @@ hook_install() {
 
 hook_post_install() {
     package_helm_install "${K8S_PACKAGE_NAME}" "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_DIR}/files/helm-chart-1"
+
+    echo "Creating the Database server on Azure, you're going to wait for a looooooooooong time... Here, go have fun: https://neal.fun/"
+    kubectl wait --for=condition=Ready flexibleserver --timeout=45m -l FlexibleServerName="$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.name")"
 }
 
 hook_upgrade() {

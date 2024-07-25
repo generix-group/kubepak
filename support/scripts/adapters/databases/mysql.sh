@@ -32,8 +32,9 @@ __mysql_vault_configure() {
     local __database_vault_password="${7}"
     local __default_ttl="${8}"
     local __max_ttl="${9}"
+    local __tls_ca_filepath="${10}"
 
-    local __creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT ALL PRIVILEGES ON \`${__database_name}\`.* TO '{{name}}'@'%'; FLUSH PRIVILEGES;"
+    local __creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES ON \`${__database_name}\`.* TO '{{name}}'@'%'; FLUSH PRIVILEGES;"
     if [[ "${__database_mode}" == "ro" ]]; then
         __creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT SELECT ON \`${__database_name}\`.* TO '{{name}}'@'%'; FLUSH PRIVILEGES;"
     fi
@@ -52,7 +53,8 @@ __mysql_vault_configure() {
         "" \
         "ALTER USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'" \
         "${__default_ttl}" \
-        "${__max_ttl}"
+        "${__max_ttl}" \
+        "${__tls_ca_filepath}"
 }
 
 __mysql_create() {
@@ -120,7 +122,7 @@ __mysql_create_user() {
 
     local __exists_statements="SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '${__database_new_username}')"
 
-    local __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT ALL PRIVILEGES ON \`${__database_name}\`.* TO '${__database_new_username}'@'%'; FLUSH PRIVILEGES;"
+    local __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP ON \`${__database_name}\`.* TO '${__database_new_username}'@'%'; FLUSH PRIVILEGES;"
     if [[ "${__database_mode}" == "ro" ]]; then
         __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT SELECT ON \`${__database_name}\`.* TO '${__database_new_username}'@'%'; FLUSH PRIVILEGES;"
     fi
@@ -161,7 +163,7 @@ __mysql_create_super_user() {
 
     local __exists_statements="SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '${__database_new_username}')"
 
-    local __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT ALL PRIVILEGES ON *.* TO '${__database_new_username}'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+    local __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, PROCESS, REFERENCES, INDEX, ALTER, SHOW DATABASES, CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, CREATE USER, EVENT, TRIGGER ON *.* TO '${__database_new_username}'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
 
     # shellcheck disable=SC2048,SC2086
     if [[ $(mysql --defaults-extra-file=<(echo $'[client]\npassword='"${__database_root_password}") ${__mysql_cmd_options[*]} -r -s -N -e "${__exists_statements}") != "1" ]]; then

@@ -127,6 +127,14 @@ package_cache_values_file_write() {
     fi
 }
 
+package_cache_values_file_write_specific() {
+    local __path_expr="${1}"
+    local __value="${2}"
+    local __specific_cache_path="${3}"
+
+    yaml_write "${CACHE_CWD}/${__specific_cache_path}"  "${__path_expr}" "${__value}" false
+}
+
 package_cache_values_file_write_string() {
     local __path_expr="${1}"
     local __value="${2}"

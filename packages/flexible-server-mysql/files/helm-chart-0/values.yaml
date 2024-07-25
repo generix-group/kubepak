@@ -15,13 +15,14 @@ packages:
     geoRedundantBackup: false
     highAvailability:
       - mode: SameZone
-        standbyAvailabilityZone: 2
+        standbyAvailabilityZone: 1
     location:
     lockLevel: CanNotDelete
     maintenanceWindow:
       dayOfWeek: 0
       startHour: 0
       startMinute: 0
+    name:
     pointInTimeRestoreTimeInUtc:
     privateDnsZoneId:
     privateDnsZoneIdRef:

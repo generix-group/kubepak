@@ -250,3 +250,11 @@ metadata:
 type: kubernetes.io/service-account-token
 EOF
 }
+
+k8s_read_secret_from_key() {
+    local __namespace="${1}"
+    local __secret_name="${2}"
+    local __key="${3}"
+
+    kubectl get secret "${__secret_name}" -n "${__namespace}" -o "jsonpath={.data.$__key}" | base64 -d
+}

@@ -3,6 +3,10 @@ kind: MySQLInstance
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    crossplane.io/external-name: {{ required "Name for the database server is required." (index .Values "packages" "flexible-server-mysql" "name") }}
+  labels:
+    FlexibleServerName: {{ required "Name for the database server is required." (index .Values "packages" "flexible-server-mysql" "name") }}
 spec:
   writeConnectionSecretToRef:
     # This will create a secret with name `crossplane-db-credentials`

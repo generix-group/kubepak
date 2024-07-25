@@ -38,7 +38,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 #-----------------------------------------------------------------------------
 # Private Constants
 
-readonly __VAULT_CHART_VERSION="0.28.0"
+readonly __VAULT_CHART_VERSION="0.28.1"
 
 readonly __VAULT_DEFAULT_TLS_CA_DST_FILE_PATH="/ssl/certs/ca-certificates.crt"
 
