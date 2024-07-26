@@ -34,7 +34,7 @@ __mysql_vault_configure() {
     local __max_ttl="${9}"
     local __tls_ca_filepath="${10}"
 
-    local __creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES ON \`${__database_name}\`.* TO '{{name}}'@'%'; FLUSH PRIVILEGES;"
+    local __creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES, CREATE ROUTINE, ALTER ROUTINE, CREATE TEMPORARY TABLES, EXECUTE, REFERENCES ON \`${__database_name}\`.* TO '{{name}}'@'%'; FLUSH PRIVILEGES;"
     if [[ "${__database_mode}" == "ro" ]]; then
         __creation_statements="CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT SELECT ON \`${__database_name}\`.* TO '{{name}}'@'%'; FLUSH PRIVILEGES;"
     fi
@@ -122,7 +122,7 @@ __mysql_create_user() {
 
     local __exists_statements="SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '${__database_new_username}')"
 
-    local __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP ON \`${__database_name}\`.* TO '${__database_new_username}'@'%'; FLUSH PRIVILEGES;"
+    local __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, CREATE ROUTINE, ALTER ROUTINE, CREATE TEMPORARY TABLES, EXECUTE, REFERENCES ON \`${__database_name}\`.* TO '${__database_new_username}'@'%'; FLUSH PRIVILEGES;"
     if [[ "${__database_mode}" == "ro" ]]; then
         __creation_statements="CREATE USER '${__database_new_username}'@'%' IDENTIFIED BY '${__database_new_password}'; GRANT SELECT ON \`${__database_name}\`.* TO '${__database_new_username}'@'%'; FLUSH PRIVILEGES;"
     fi
