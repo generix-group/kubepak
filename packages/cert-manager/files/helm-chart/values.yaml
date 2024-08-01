@@ -3,3 +3,5 @@ packages:
     image:
       repository:
       tag:
+    azure-workload-identity:
+      enabled: false
