@@ -18,6 +18,22 @@ spec:
     solvers:
     {{- range $solverIndex, $solverDns01 := $acmeIssuer.solvers.dns01 }}
     - dns01:
+        {{- if eq $solverDns01.provider "azureDNS" }}
+        azureDNS:
+          hostedZoneName: {{ $solverDns01.azureDNS.hostedZoneName }}
+          subscriptionID: {{ $solverDns01.azureDNS.subscriptionId }}
+          resourceGroupName: {{ $solverDns01.azureDNS.resourceGroupName }}
+          {{- if index $.Values "packages" "cert-manager" "azure-workload-identity" "enabled" }}
+          managedIdentity:
+            clientID: {{ $.Values "packages" "cert-manager" "azure-workload-identity" "clientId"}}
+          {{- else }}
+          clientID: {{ $solverDns01.azureDNS.clientId }}
+          clientSecretSecretRef:
+            name: {{ $.Release.Name }}-{{ $acmeIssuer.name }}-{{ $solverIndex }}
+            key: client-secret
+          tenantID: {{ $solverDns01.azureDNS.tenantId }}
+          {{- end }}
+        {{- end }}
         {{- if eq $solverDns01.provider "route53" }}
         route53:
           region: {{ $solverDns01.route53.awsRegion }}
@@ -42,6 +58,11 @@ spec:
           - "{{ $dnsZone }}"
           {{- end }}
         {{- end }}
+    {{- end }}
+    {{- if $acmeIssuer.solvers.http01 }}
+    - http01:
+        ingress:
+          name: nginx
     {{- end }}
 ...
 {{- end }}

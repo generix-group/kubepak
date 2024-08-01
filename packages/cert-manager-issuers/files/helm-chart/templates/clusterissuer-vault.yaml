@@ -1,0 +1,33 @@
+{{- range $vaultIssuer := index .Values "packages" "cert-manager-issuers" "issuers" "vault" }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ $.Chart.Name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/part-of: {{ $.Values.organization }}.{{ $.Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ $.Release.Name }}-vault-{{ $vaultIssuer.name }}
+spec:
+  vault:
+    auth:
+      {{- if eq $vaultIssuer.auth.type "appRole"}}
+      appRole:
+        path: {{ $vaultIssuer.auth.appRole.path }}
+        roleId: {{ $vaultIssuer.auth.appRole.roleId }}
+        secretRef:
+          name: {{ $.Release.Name }}-vault-approle-secret
+          key: secretId
+      {{- end }}
+      {{- if eq $vaultIssuer.auth.type "kubernetes"}}
+      kubernetes:
+        role: {{ $vaultIssuer.auth.kubernetes.role }}
+        mountPath: {{ $vaultIssuer.auth.kubernetes.mountPath }}
+        serviceAccountRef:
+          name: vault-clusterissuer
+      {{- end }}
+    path: $vaultIssuer.pkiPath
+    server: $vaultIssuer.server
+...
+{{- end }}

@@ -25,6 +25,8 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 # Package Options
 
 # @package-option attributes="final"
+# @package-option attributes="shared"
+
 
 # @package-option dependencies="cert-manager"
 
@@ -38,6 +40,13 @@ hook_install() {
     for __i in $(seq "$(package_cache_values_file_count ".packages.${PACKAGE_IPATH}.issuers.acme")"); do
         local __issuer_name
         __issuer_name="${K8S_PACKAGE_NAME}-$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.issuers.acme[$((__i - 1))].name")"
+
+        k8s_resource_wait "default" "ClusterIssuer" "${__issuer_name}"
+    done
+
+    for __i in $(seq "$(package_cache_values_file_count ".packages.${PACKAGE_IPATH}.issuers.vault")"); do
+        local __issuer_name
+        __issuer_name="${K8S_PACKAGE_NAME}-$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.issuers.vault[$((__i - 1))].name")"
 
         k8s_resource_wait "default" "ClusterIssuer" "${__issuer_name}"
     done

@@ -34,6 +34,13 @@ spec:
       values: |
         global:
           {{- include "common.registryCredentials.imagePullSecrets" (merge (dict "hasNameField" true) .) | nindent 10 }}
+        {{- if index .Values "packages" "cert-manager" "azure-workload-identity" "enabled"}}
+        podLabels:
+          azure.workload.identity/use: "true"
+        serviceAccount:
+          labels:
+            azure.workload.identity/use: "true"
+        {{- end }}
   destination:
     server: {{ .Values.kubernetes.server }}
     namespace: {{ .Release.Namespace }}

@@ -1,0 +1,30 @@
+{{- range $acmeIssuer := index .Values "packages" "cert-manager-issuers" "issuers" "acme" }}
+{{- if $acmeIssuer.solvers.http01.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: acme-challenge
+  namespace: {{ index $.Values "packages" "cert-manager" "namespace" }}
+spec:
+  ports:
+    - port: 80
+      targetPort: 8089
+  selector:
+    'acme.cert-manager.io/http01-solver': 'true'
+---
+apiVersion: getambassador.io/v3alpha1
+kind: Mapping
+metadata:
+  name: acme-challenge
+  namespace: {{ index $.Values "packages" "cert-manager" "namespace" }}
+spec:
+  ambassador_id:
+    - {{ include "common.ingressController.id" (merge (dict "networkPlane" (default "undefined" $acmeIssuer.solvers.http01.networkPlane)) $) }}
+  hostname: '*'
+  prefix: '/.well-known/acme-challenge/'
+  rewrite: ''
+  service: "acme-challenge.{{ index $.Values "packages" "cert-manager" "namespace" }}"
+...
+{{- end }}
+{{- end }}
