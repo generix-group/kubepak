@@ -126,6 +126,11 @@ spec:
               configMap:
                 name: {{ .Release.Name }}-ca-certificates
             {{- end }}
+            {{- if eq (include "common.context.contains" (merge (dict "value" "vault-azure-database") .)) "true"  }}
+            - name: db-tls-ca
+              secret:
+                secretName: "{{ .Release.Name }}-vault-database-ca"
+            {{- end }}
             - name: "extra-config"
               secret:
                 defaultMode: 420
@@ -136,6 +141,11 @@ spec:
             - name: ca-certificates
               readOnly: true
               mountPath: {{ .Values.packages.vault.tls.ca.dstFilePath | dir }}
+            {{- end }}
+            {{- if eq (include "common.context.contains" (merge (dict "value" "vault-azure-database") .)) "true"  }}
+            - name: "db-tls-ca"
+              mountPath: "/vault/userconfig/db-tls-ca"
+              readOnly: true
             {{- end }}
             - name: "extra-config"
               mountPath: "/vault/userconfig/extra-config"

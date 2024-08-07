@@ -76,6 +76,12 @@ hook_pre_install() {
     local __database_root_password
     __database_root_password="$(package_cache_values_file_read ".packages.vault-database.metadata.root.password")"
 
+    if [[ ,${CONTEXT}, =~ ,vault-azure-database, ]]; then
+        if ! k8s_resource_exists "${K8S_PACKAGE_NAMESPACE}" "secret" "${PACKAGE_NAME}-vault-database-ca"; then
+            k8s_secret_create_from_file "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_NAME}-vault-database-ca" "generic" "tlsca.pem" "$(package_cache_values_file_read ".packages.vault-database.metadata.tls_ca_filepath")"
+        fi
+    fi
+
     database_create "postgresql" "vault" "${__database_host}" "${__database_port}" "" "${__database_root_username}" "${__database_root_password}"
 
     local __database_vault_password
