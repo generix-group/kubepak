@@ -48,13 +48,20 @@ __database_vault_configure() {
     fi
 
     if ! vault read "database/config/${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}" >/dev/null; then
-        vault write "database/config/${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}" \
-            plugin_name="${__database_engine}-database-plugin" \
-            allowed_roles="${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}" \
-            connection_url="${__connection_url}" \
-            username="${__database_vault_username}" \
-            password="${__database_vault_password}" \
-            tls_ca="@${__tls_ca_filepath}"
+        vault_command=(
+            vault write "database/config/${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}"
+            plugin_name="${__database_engine}-database-plugin"
+            allowed_roles="${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}"
+            connection_url="${__connection_url}"
+            username="${__database_vault_username}"
+            password="${__database_vault_password}"
+        )
+
+        if [[ -n "${__tls_ca_filepath}" ]]; then
+            vault_command+=("tls_ca=@${__tls_ca_filepath}")
+        fi
+
+        "${vault_command[@]}"
 
         vault write -force "database/rotate-root/${__database_hostname%.}-${__database_port}-${__database_name}-${__database_mode}"
 
