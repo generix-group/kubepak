@@ -38,6 +38,9 @@ spec:
         route53:
           region: {{ $solverDns01.route53.awsRegion }}
           accessKeyID: {{ $solverDns01.route53.accessKeyId }}
+          {{- if $solverDns01.route53.hostedZoneID }}
+          hostedZoneID: {{ $solverDns01.route53.hostedZoneID }}
+          {{- end }}
           secretAccessKeySecretRef:
             name: {{ $.Release.Name }}-{{ $acmeIssuer.name }}-{{ $solverIndex }}
             key: secret-access-key
@@ -59,7 +62,7 @@ spec:
           {{- end }}
         {{- end }}
     {{- end }}
-    {{- if $acmeIssuer.solvers.http01 }}
+    {{- if $acmeIssuer.solvers.http01.enabled }}
     - http01:
         ingress:
           name: nginx
