@@ -1,0 +1,58 @@
+---
+apiVersion: storage.azure.upbound.io/v1beta1
+kind: Account
+metadata:
+  annotations:
+    crossplane.io/external-name: {{ .Values.organization }}{{ .Values.project }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+    StorageAccountName: {{ .Values.organization }}
+  name: {{ .Values.organization }}
+spec:
+  forProvider:
+    accountKind: {{ index .Values "packages" "azure-storage" "blobs" "accountKind"}}
+    accessTier: {{ index .Values "packages" "azure-storage" "blobs" "accessTier"}}
+    accountTier: {{ index .Values "packages" "azure-storage" "blobs" "accountTier"}}
+    accountReplicationType: {{ index .Values "packages" "azure-storage" "blobs" "accountReplicationType" }}
+    allowNestedItemsToBePublic: false
+    blobProperties:
+      - versioningEnabled: true
+    {{- if and (index .Values "packages" "azure-storage" "blobs" "identity" "identityIds") (index .Values "packages" "azure-storage" "blobs" "identity" "type") }}
+    identity:
+      - identityIds: {{ index .Values "packages" "azure-storage" "blobs" "identity" "identityIds"}}
+        type: {{ index .Values "packages" "azure-storage" "blobs" "identity" "type"}}
+    {{- end }}
+    infrastructureEncryptionEnabled: true
+    largeFileShareEnabled: true
+    location: "{{ index .Values "packages" "azure-storage" "blobs" "location"}}"
+    resourceGroupName: "{{ index .Values "packages" "azure-storage" "blobs" "resourceGroupName"}}"
+  providerConfigRef:
+    name: crossplane-azure-provider
+  writeConnectionSecretToRef:
+    name: bucket-details
+    namespace: {{ .Release.Namespace }}
+    {{- if and (index .Values "packages" "azure-storage" "blobs" "writeConnectionSecretToRef" "tags" "key") (index .Values "packages" "azure-storage" "blobs" "writeConnectionSecretToRef" "tags" "value") }}
+    tags:
+      - key: {{ index .Values "packages" "azure-storage" "blobs" "writeConnectionSecretToRef" "tags" "key"}}
+        value: {{ index .Values "packages" "azure-storage" "blobs" "writeConnectionSecretToRef" "tags" "value"}}
+    {{- end }}
+
+---
+apiVersion: storage.azure.upbound.io/v1beta1
+kind: Container
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Values.environment }}
+spec:
+  forProvider:
+    containerAccessType: private
+    storageAccountName: {{ .Values.organization }}{{ .Values.project }}
+  providerConfigRef:
+    name: crossplane-azure-provider

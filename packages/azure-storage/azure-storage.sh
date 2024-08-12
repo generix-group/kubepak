@@ -26,6 +26,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 
 # @package-option dependencies="argo-cd"
 # @package-option dependencies="crossplane"
+# @package-option dependencies="crossplane-azure-provider"
 
 #-----------------------------------------------------------------------------
 # Private Constants
@@ -38,11 +39,24 @@ hook_initialize() {
     k8s_namespace_create "${K8S_PACKAGE_NAMESPACE}"
 
     registry_credentials_add_namespace "${K8S_PACKAGE_NAMESPACE}"
+
+    package_cache_values_file_write ".packages.azure-storage.blobs.accountname" "${ORGANIZATION}" true
+    package_cache_values_file_write ".packages.azure-storage.blobs.azurename" "${ORGANIZATION}${PROJECT}" true
+    package_cache_values_file_write ".packages.azure-storage.blobs.containername" "${ENVIRONMENT}" true
+
+    package_cache_values_file_write ".packages.azure-storage.nfs.accountname" "${ORGANIZATION}-nfs" true
+    package_cache_values_file_write ".packages.azure-storage.nfs.azurename" "${ORGANIZATION}${PROJECT}nfs" true
+    package_cache_values_file_write ".packages.azure-storage.nfs.containername" "${ENVIRONMENT}-nfs" true
 }
 
 hook_install() {
     package_helm_install "${K8S_PACKAGE_NAME}" "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_DIR}/files/helm-chart"
 
+}
+
+hook_post_install() {
+    kubectl wait --for=condition=Ready account --timeout=45m -l StorageAccountName="$(package_cache_values_file_read ".organization")"
+    kubectl wait --for=condition=Ready account --timeout=45m -l StorageAccountName="$(package_cache_values_file_read ".organization")-nfs"
 }
 
 hook_upgrade() {

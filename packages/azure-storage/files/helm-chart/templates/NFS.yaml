@@ -1,0 +1,50 @@
+---
+apiVersion: storage.azure.upbound.io/v1beta1
+kind: Account
+metadata:
+  annotations:
+    crossplane.io/external-name: {{ .Values.organization }}{{ .Values.project }}nfs
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+    StorageAccountName: {{ .Values.organization }}-nfs
+  name: {{ .Values.organization }}-nfs
+spec:
+  forProvider:
+    accountKind: "BlockBlobStorage"
+    accountTier: "Premium"
+    accountReplicationType: ZRS
+    allowNestedItemsToBePublic: false
+    infrastructureEncryptionEnabled: true
+    isHnsEnabled: true
+    location: "{{ index .Values "packages" "azure-storage" "nfs" "location"}}"
+    networkRules:
+      - defaultAction: "Deny"
+        # Need to whitelist your ip if you want to deploy from your local cluster
+        # ipRules:
+        #   - 107.171.249.3
+        virtualNetworkSubnetIds:
+          - "{{ index .Values "packages" "azure-storage" "nfs" "networkRules" "virtualNetworkSubnetIds"}}"
+    nfsv3Enabled: true
+    resourceGroupName: "{{ index .Values "packages" "azure-storage" "nfs" "resourceGroupName"}}"
+  providerConfigRef:
+    name: crossplane-azure-provider
+
+---
+apiVersion: storage.azure.upbound.io/v1beta1
+kind: Container
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Values.environment }}-nfs
+spec:
+  forProvider:
+    containerAccessType: private
+    storageAccountName: {{ .Values.organization }}{{ .Values.project }}nfs
+  providerConfigRef:
+    name: crossplane-azure-provider

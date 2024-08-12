@@ -31,7 +31,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 #-----------------------------------------------------------------------------
 # Private Constants
 
-readonly __CROSSPLANE_AZURE_PROVIDER_VERSION="1.2.0"
+readonly __CROSSPLANE_AZURE_PROVIDER_VERSION="1.3.0"
 
 #-----------------------------------------------------------------------------
 # Public Hooks
