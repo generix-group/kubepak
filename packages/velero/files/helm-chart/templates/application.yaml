@@ -1,0 +1,141 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}
+  namespace: {{ index .Values "packages" "argo-cd" "namespace" }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.environment }}-{{ .Values.organization }}-{{ .Values.project }}
+  source:
+    repoURL: https://vmware-tanzu.github.io/helm-charts/
+    targetRevision: {{ .Values.packages.velero.chartVersion }}
+    chart: velero
+    helm:
+      parameters:
+        - name: fullnameOverride
+          value: "{{ .Release.Name }}"
+        {{- if .Values.packages.velero.image.repository }}
+        - name: image.repository
+          value: "{{ .Values.packages.velero.image.repository }}"
+        {{- end }}
+        {{- if .Values.packages.velero.image.tag }}
+        - name: image.tag
+          value: "{{ .Values.packages.velero.image.tag }}"
+        {{- end }}
+      values: |
+        snapshotsEnabled: false
+        initContainers:
+          {{- if or (not .Values.packages.velero.containers) (lt (len .Values.packages.velero.containers) 1) }}
+            {{ fail "At least one velero container is required" }}
+          {{- end }}
+          {{- range .Values.packages.velero.containers }}
+          - name: {{ .name }}
+            image: {{ .image }}
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - mountPath: /target
+                name: plugins
+          {{- end }}
+        resources:
+          requests:
+            cpu: {{ .Values.packages.velero.resources.requests.cpu }}
+            memory: {{ .Values.packages.velero.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.packages.velero.resources.limits.cpu }}
+            memory: {{ .Values.packages.velero.resources.limits.memory }}
+        metrics:
+          enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+          serviceMonitor:
+            enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+            additionalLabels:
+              release: prometheus-stack
+          nodeAgentPodMonitor:
+            enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
+            additionalLabels:
+              release: prometheus-stack
+        {{- with .Values.packages.velero.schedules }}
+        schedules:
+          {{- range . }}
+          {{ required "schedules.name is required" .name }}:
+            disabled: {{ not .enabled }}
+            {{- if .labels }}
+            labels:
+              {{- range $key, $value := .labels }}
+              {{ $key }}: {{ $value }}
+              {{- end }}
+            {{- end }}
+            {{- if .annotations }}
+            annotations:
+              {{- range $key, $value := .annotations }}
+              {{ $key }}: {{ $value }}
+              {{- end }}
+            {{- end }}
+            schedule: {{ required "schedules.schedule is required" .schedule | quote }}
+            useOwnerReferencesInBackup: false
+            {{- if .paused }}
+            paused: {{ .paused }}
+            {{- end }}
+            template:
+              ttl: {{ required "schedules.ttl is required" .ttl }}
+              storageLocation: {{ required "schedules.storageLocation is required" .storageLocation }}
+              {{- if .includedNamespaces }}
+              includedNamespaces:
+                {{- range .includedNamespaces }}
+                - {{ . }}
+                {{- end }}
+              {{- end }}
+              {{- if .excludedNamespaces }}
+              excludedNamespaces:
+                {{- range .excludedNamespaces }}
+                - {{ . }}
+                {{- end }}
+              {{- end }}
+          {{- end }}
+        {{- end }}
+        configuration:
+          {{- $backupStorageLocationCount := 0 -}}
+          {{- range .Values.packages.velero.configuration.backupStorageLocation }}
+            {{- if eq .name "default" -}}
+              {{- $backupStorageLocationCount = add $backupStorageLocationCount 1 -}}
+            {{- end -}}
+          {{- end -}}
+          {{- if ne $backupStorageLocationCount 1 }}
+            {{- fail "Exactly one backupStorageLocation should be named default" }}
+          {{- end }}
+          backupStorageLocation:
+            {{- range .Values.packages.velero.configuration.backupStorageLocation }}
+            - name: {{ required "configuration.backupStorageLocation.name is required" .name }}
+              provider: {{ required "configuration.backupStorageLocation.provider is required" .provider }}
+              bucket: {{ required "configuration.backupStorageLocation.bucket is required" .bucket }}
+              prefix: {{ default $.Values.organization .prefix }}
+              {{- if eq .name "default" }}
+              default: true
+              {{- else }}
+              default: false
+              {{- end }}
+              {{- if .accessMode }}
+              accessMode: {{ .accessMode }}
+              {{- end }}
+              config:
+                resourceGroup: {{ required "configuration.backupStorageLocation.resourceGroup is required" .resourceGroup }}
+                storageAccount: {{ required "configuration.backupStorageLocation.storageAccount is required" .storageAccount }}
+                subscriptionId: {{ required "configuration.backupStorageLocation.subscriptionId is required" .subscriptionId }}
+            {{- end }}
+        credentials:
+          existingSecret: {{ required "Secret is required for velero." .Values.packages.velero.credentials.secretName }}
+
+  destination:
+    server: {{ .Values.kubernetes.server }}
+    namespace: {{ .Release.Namespace }}
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+...
