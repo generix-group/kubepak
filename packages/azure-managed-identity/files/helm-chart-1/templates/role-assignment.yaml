@@ -1,0 +1,38 @@
+---
+apiVersion: authorization.azure.upbound.io/v1beta1
+kind: RoleAssignment
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}-{{ .Values.environment }}
+spec:
+  forProvider:
+    principalId: {{ index .Values "packages" "azure-managed-identity" "principalId"}}
+    roleDefinitionName: {{ index .Values "packages" "azure-managed-identity" "roleDefinitionName"}}
+    scope: {{ index .Values "packages" "azure-managed-identity" "scope"}}
+  providerConfigRef:
+    name: crossplane-azure-provider
+---
+apiVersion: managedidentity.azure.upbound.io/v1beta1
+kind: FederatedIdentityCredential
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}-{{ .Values.environment }}
+spec:
+  forProvider:
+    audience:
+      - api://AzureADTokenExchange
+    issuer: {{ index .Values "packages" "azure-managed-identity" "issuer"}}
+    parentIdRef:
+      name: {{ .Release.Name }}-{{ .Values.environment }}
+    resourceGroupName: {{ index .Values "packages" "azure-managed-identity" "resourceGroupName"}}
+    subject: system:serviceaccount:{{ index .Values "packages" "azure-managed-identity" "applicationNs" }}:{{ index .Values "packages" "azure-managed-identity" "sa" }}
+  providerConfigRef:
+    name: crossplane-azure-provider

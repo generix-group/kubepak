@@ -1,0 +1,8 @@
+---
+packages:
+  azure-managed-identity:
+    aksClusterName:
+    location:
+    resourceGroupName:
+    roleDefinitionName:
+    scope:
