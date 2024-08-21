@@ -1,0 +1,22 @@
+---
+packages:
+  azure-storage:
+    blobs:
+      accountKind:
+      accessTier:
+      accountTier:
+      accountReplicationType:
+      identity:
+        identityIds:
+        type:
+      location:
+      resourceGroupName:
+      writeConnectionSecretToRef:
+        tags:
+          key:
+          value:
+    nfs:
+      location:
+      networkRules:
+        virtualNetworkSubnetIds:
+      resourceGroupName:
