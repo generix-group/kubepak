@@ -127,6 +127,78 @@ k8s_namespace_delete() {
     kubectl delete namespace "${__namespace}" >/dev/null 2>&1
 }
 
+k8s_persistent_volume_create() {
+    local __pv_name="${1}"
+    local __access_mode="${2}"
+    local __storage_capacity="${3}"
+    local __storage_class_name="${4}"
+    local __csi_driver="${5}"
+    local __reclaim_policy="${6}"
+    local __volume_handle="${7}"
+    local __mount_options="${8}"
+    local __volume_attributes="${9}"
+
+    local __mount_options_list=$(echo ${__mount_options} | tr ' ' '\n' | sed 's/^/      - /')
+
+    # Convert JSON string to YAML format for volumeAttributes
+    local __volume_attributes_yaml=$(echo "${__volume_attributes}" | jq -r 'to_entries | .[] | "\(.key): \(.value)"' | sed 's/^/          /')
+
+    kubectl apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    annotations:
+        pv.kubernetes.io/provisioned-by: ${__csi_driver}
+    name: ${__pv_name}
+    labels:
+      app.kubernetes.io/name: ${__pv_name}
+      app.kubernetes.io/managed-by: kubepak
+spec:
+    capacity:
+        storage: ${__storage_capacity}
+    accessModes:
+        - ${__access_mode}
+    persistentVolumeReclaimPolicy: ${__reclaim_policy}
+    storageClassName: ${__storage_class_name}
+    mountOptions:
+${__mount_options_list}
+    csi:
+        driver: ${__csi_driver}
+        volumeHandle: ${__volume_handle}
+        volumeAttributes:
+${__volume_attributes_yaml}
+EOF
+}
+
+k8s_persistent_volume_claim_create() {
+    local __namespace="${1}"
+    local __pvc_name="${2}"
+    local __access_mode="${3}"
+    local __storage_capacity="${4}"
+    local __volume_name="${5}"
+    local __storage_class_name="${6}"
+
+    kubectl apply -f - <<EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${__pvc_name}
+  namespace: ${__namespace}
+  labels:
+    app.kubernetes.io/name: ${__pvc_name}
+    app.kubernetes.io/part-of: ${ORGANIZATION}.${PROJECT}
+    app.kubernetes.io/managed-by: kubepak
+spec:
+    accessModes:
+        - ${__access_mode}
+    resources:
+        requests:
+            storage: ${__storage_capacity}
+    volumeName: ${__volume_name}
+    storageClassName: ${__storage_class_name}
+EOF
+}
+
 k8s_resource_delete() {
     local __namespace="${1}"
     local __resource_type="${2}"
