@@ -30,7 +30,6 @@ spec:
           value: "{{ .Values.packages.velero.image.tag }}"
         {{- end }}
       values: |
-        snapshotsEnabled: false
         initContainers:
           {{- if or (not .Values.packages.velero.containers) (lt (len .Values.packages.velero.containers) 1) }}
             {{ fail "At least one velero container is required" }}
@@ -100,6 +99,9 @@ spec:
           {{- end }}
         {{- end }}
         configuration:
+          defaultVolumesToFsBackup: true
+          features: EnableCSI
+          defaultSnapshotMoveData: true
           {{- $backupStorageLocationCount := 0 -}}
           {{- range .Values.packages.velero.configuration.backupStorageLocation }}
             {{- if eq .name "default" -}}
@@ -128,9 +130,26 @@ spec:
                 storageAccount: {{ required "configuration.backupStorageLocation.storageAccount is required" .storageAccount }}
                 subscriptionId: {{ required "configuration.backupStorageLocation.subscriptionId is required" .subscriptionId }}
             {{- end }}
+          {{- if index .Values.packages.velero.configuration.volumeSnapshotLocation 0 "name" }}
+          volumeSnapshotLocation:
+            {{- range .Values.packages.velero.configuration.volumeSnapshotLocation }}
+            - name: {{ required "configuration.volumeSnapshotLocation.name is required" .name }}
+              provider: {{ required "configuration.volumeSnapshotLocation.provider is required" .provider }}
+              config:
+                resourceGroup: {{ required "configuration.volumeSnapshotLocation.resourceGroup is required" .resourceGroup }}
+                subscriptionId: {{ required "configuration.volumeSnapshotLocation.subscriptionId is required" .subscriptionId }}
+                {{- if .incremental }}
+                incremental: {{ .incremental }}
+                {{- end }}
+                {{- if .tags }}
+                tags: {{ .tags }}
+                {{- end }}
+            {{- end }}
+          {{- end }}
         credentials:
           existingSecret: {{ required "Secret is required for velero." .Values.packages.velero.credentials.secretName }}
-
+        deployNodeAgent: true
+        snapshotsEnabled: true
   destination:
     server: {{ .Values.kubernetes.server }}
     namespace: {{ .Release.Namespace }}

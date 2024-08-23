@@ -41,6 +41,13 @@ packages:
           resourceGroup:
           storageAccount:
           subscriptionId:
+      volumeSnapshotLocation:
+        - name:
+          provider:
+          resourceGroup:
+          subscriptionId:
+          incremental:
+          tags:
     credentials:
       secretName: velero-credentials
       credentials_b64:
