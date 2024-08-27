@@ -1,0 +1,53 @@
+packages:
+  velero:
+    image:
+      repository:
+      tag:
+    containers:
+      - name:
+        image:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 128Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+    metrics:
+      serviceMonitor:
+        additionalLabels:
+          release: prometheus-stack
+      nodeAgentPodMonitor:
+        additionalLabels:
+          release: prometheus-stack
+    schedules:
+      - name:
+        enabled:
+        labels:
+        annotations:
+        schedule:
+        paused:
+        ttl:
+        storageLocation:
+        includedNamespaces: []
+        excludedNamespaces: []
+    configuration:
+      backupStorageLocation:
+        - name:
+          provider:
+          bucket:
+          prefix:
+          accessMode: ReadWrite
+          resourceGroup:
+          storageAccount:
+          subscriptionId:
+      volumeSnapshotLocation:
+        - name:
+          provider:
+          resourceGroup:
+          subscriptionId:
+          incremental:
+          tags:
+    credentials:
+      secretName: velero-credentials
+      credentials_b64:
