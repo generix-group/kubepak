@@ -14,4 +14,6 @@ spec:
     name: "crossplane-azure-provider-dbforpostgresql"
     lockLevel: {{ index .Values "packages" "flexible-server-postgresql" "lockLevel" }}
     scope: {{ printf "/subscriptions/%s/resourceGroups/%s/providers/%s/flexibleServers/%s" (index .Values "packages" "flexible-server-postgresql" "subscription")  (index .Values "packages" "flexible-server-postgresql" "resourceGroupName")  "Microsoft.DBforPostgreSQL" .Release.Name }}
+  providerConfigRef:
+    name: crossplane-azure-provider
 ...
