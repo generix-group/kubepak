@@ -25,7 +25,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 # Package Options
 
 # @package-option dependencies="argo-cd"
-# @package-option dependencies="crossplane"
+# @package-option dependencies="crossplane-azure-provider"
 
 #-----------------------------------------------------------------------------
 # Private Constants
