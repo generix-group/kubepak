@@ -11,3 +11,30 @@ spec:
   writeConnectionSecretToRef:
     # This will create a secret with name `crossplane-db-credentials`
     name: crossplane-db-credentials
+
+---
+{{- if index .Values "packages" "crossplane-azure-provider" "whitelist" }}
+{{- $outer := . }}
+  {{- range $whitelists := (index .Values "packages" "crossplane-azure-provider" "whitelist") }}
+  {{- with $outer }}
+apiVersion: dbformysql.azure.upbound.io/v1beta1
+kind: FlexibleServerFirewallRule
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ required "name for the whitelist is required" $whitelists.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  forProvider:
+    startIpAddress: {{ required "startip for the whitelist is required" $whitelists.startIP }}
+    endIpAddress: {{ required "endip for the whitelist is required" $whitelists.endIP }}
+    resourceGroupName: {{ index .Values "packages" "flexible-server-mysql" "resourceGroupName" }}
+    serverName: {{ index .Values "packages" "flexible-server-mysql" "name" }}
+  providerConfigRef:
+    name: crossplane-azure-provider
+  {{- end }}
+  {{- end }}
+{{- end }}
