@@ -23,7 +23,7 @@ spec:
     {{- if eq $service.name $mapping.serviceName }}
       {{- range $port := $service.ports }}
         {{- if eq $port.port $mapping.servicePort }}
-  service: {{ $.Release.Name }}-{{ $mapping.serviceName }}.{{ $.Release.Namespace }}:{{ $mapping.servicePort }}
+  service: {{ $port.name }}://{{ $.Release.Name }}-{{ $mapping.serviceName }}.{{ $.Release.Namespace }}:{{ $mapping.servicePort }}
         {{- end }}
       {{- end }}
     {{- end }}

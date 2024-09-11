@@ -40,18 +40,27 @@ hook_initialize() {
 
     registry_credentials_add_namespace "${K8S_PACKAGE_NAMESPACE}"
 
-    package_cache_values_file_write ".packages.azure-storage.blobs.accountname" "${ORGANIZATION}" true
-    package_cache_values_file_write ".packages.azure-storage.blobs.azurename" "${ORGANIZATION}${PROJECT}" true
-    package_cache_values_file_write ".packages.azure-storage.blobs.containername" "${ENVIRONMENT}" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.accountname" "${ORGANIZATION}" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.azurename" "${ORGANIZATION}${PROJECT}" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.containername" "${ENVIRONMENT}" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.accountKind" "$(package_cache_values_file_read ".packages.azure-storage.blobs.accountKind")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.accessTier" "$(package_cache_values_file_read ".packages.azure-storage.blobs.accessTier")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.accountTier" "$(package_cache_values_file_read ".packages.azure-storage.blobs.accountTier")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.accountReplicationType" "$(package_cache_values_file_read ".packages.azure-storage.blobs.accountReplicationType")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.location" "$(package_cache_values_file_read ".packages.azure-storage.blobs.location")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.blobs.resourceGroupName" "$(package_cache_values_file_read ".packages.azure-storage.blobs.resourceGroupName")" true
 
-    package_cache_values_file_write ".packages.azure-storage.nfs.accountname" "${ORGANIZATION}-nfs" true
-    package_cache_values_file_write ".packages.azure-storage.nfs.azurename" "${ORGANIZATION}${PROJECT}nfs" true
-    package_cache_values_file_write ".packages.azure-storage.nfs.containername" "${ENVIRONMENT}-nfs" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.nfs.accountname" "${ORGANIZATION}-nfs" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.nfs.azurename" "${ORGANIZATION}${PROJECT}nfs" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.nfs.containername" "${ENVIRONMENT}-nfs" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.nfs.location" "$(package_cache_values_file_read ".packages.azure-storage.nfs.location")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.nfs.resourceGroupName" "$(package_cache_values_file_read ".packages.azure-storage.nfs.resourceGroupName")" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.nfs.networkRules.virtualNetworkSubnetIds" "$(package_cache_values_file_read ".packages.azure-storage.nfs.networkRules.virtualNetworkSubnetIds")" true
+
 }
 
 hook_install() {
     package_helm_install "${K8S_PACKAGE_NAME}" "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_DIR}/files/helm-chart"
-
 }
 
 hook_post_install() {

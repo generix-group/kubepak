@@ -13,8 +13,8 @@ metadata:
   name: {{ .Values.organization }}-nfs
 spec:
   forProvider:
-    accountKind: "BlockBlobStorage"
-    accountTier: "Premium"
+    accountKind: "StorageV2"
+    accountTier: "Standard"
     accountReplicationType: ZRS
     allowNestedItemsToBePublic: false
     infrastructureEncryptionEnabled: true

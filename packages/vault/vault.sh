@@ -140,6 +140,7 @@ hook_post_install() {
     __vault_token="$(grep -Po 'Initial Root Token: \K.*' <<<"${__init_output}")"
 
     vault login "${__vault_token}" >/dev/null 2>&1
+    export VAULT_TOKEN="${__vault_token}"
 
     package_cache_values_file_write ".packages.${PACKAGE_IPATH}.rootToken" "${__vault_token}" true
 

@@ -26,7 +26,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 # Package Options
 
 # @package-option dependencies="argo-cd"
-# @package-option dependencies="crossplane"
+# @package-option dependencies="crossplane-azure-provider"
 
 
 #-----------------------------------------------------------------------------
@@ -45,7 +45,8 @@ hook_install() {
 hook_post_install() {
     package_helm_install "${K8S_PACKAGE_NAME}" "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_DIR}/files/helm-chart-1"
 
-    echo "Creating the Database server on Azure, you're going to wait for a looooooooooong time... Here, go have fun: https://neal.fun/"
+    # echo "Creating the Database server on Azure, you're going to wait for a looooooooooong time... Here, go have fun: https://neal.fun/"
+    echo "Creating the Database server on Azure..."
     kubectl wait --for=condition=Ready flexibleserver --timeout=45m -l FlexibleServerName="$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.name")"
 }
 
