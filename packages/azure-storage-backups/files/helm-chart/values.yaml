@@ -1,0 +1,19 @@
+---
+packages:
+  azure-storage-backups:
+    accountKind:
+    accessTier:
+    accountTier:
+    accountReplicationType:
+    identity:
+      identityIds:
+      type:
+    location:
+    resourceGroupName:
+    writeConnectionSecretToRef:
+      tags:
+        key:
+        value:
+    lockLevel: CanNotDelete
+    subscriptionId:
+    containers: []

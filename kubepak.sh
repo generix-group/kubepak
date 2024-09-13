@@ -46,6 +46,7 @@ __opt_cache_root_path="${__SCRIPT_DIR}/.cache"
 __opt_clean_cache=false
 __opt_no_deps=false
 __opt_config_file=""
+__opt_packages_list=""
 
 #-----------------------------------------------------------------------------
 # Private Methods
@@ -194,6 +195,11 @@ __config_file_parse() {
 
     if [[ -z "${__opt_cilium_azure_resoure_group}" ]]; then
         __opt_cilium_azure_resoure_group="$(yaml_read "${__opt_config_file}" ".ciliumAzureResoureGroup")"
+    fi
+
+    if [[ -z "${__opt_packages_list}" ]]; then
+        readarray -t arr <<<"$(yaml_read "${__opt_config_file}" ".packages[]")"
+        __opt_packages_list="$(IFS=,; echo "${arr[*]}")"
     fi
 
     mapfile -t __tmp < <(yaml_read "${__opt_config_file}" ".packages[]")
@@ -702,6 +708,7 @@ main() {
     export ENVIRONMENT="${__opt_environment}"
     export ORGANIZATION="${__opt_organization}"
     export PROJECT="${__opt_project}"
+    export PACKAGES="${__opt_packages_list}"
 
     # Execute the specified command
     case "${__arg_command}" in

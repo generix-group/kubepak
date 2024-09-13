@@ -27,6 +27,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../../support/
 # @package-option attributes="final"
 # @package-option attributes="shared"
 
+# @package-option dependencies="azure-storage-backups" [ ",${PACKAGES}," =~ ",azure-storage-backups," ]
 # @package-option dependencies="argo-cd"
 
 #-----------------------------------------------------------------------------
@@ -63,6 +64,61 @@ hook_initialize() {
 }
 
 hook_install() {
+    if [[ ,${PACKAGES}, =~ ,azure-storage-backups, ]]; then
+        echo "Azure storage detected, creating backup credentials for Velero."
+        # Create Secret
+        AZURE_SUBSCRIPTION_ID=$(az account list --query '[?isDefault].id' -o tsv)
+        AZURE_ROLE=Velero
+        AZURE_TENANT_ID=$(az account list --query '[?isDefault].tenantId' -o tsv)
+        AZURE_RESOURCE_GROUP=$(package_cache_values_file_read ".packages.azure-storage-backups.resourceGroupName")
+
+        if [ -z "$(az role definition list --name "${AZURE_ROLE}")" ]; then
+            az role definition create --role-definition '{
+               "Name": "'"${AZURE_ROLE}"'",
+               "Description": "Velero related permissions to perform backups, restores and deletions",
+               "Actions": [
+                   "Microsoft.Compute/disks/read",
+                   "Microsoft.Compute/disks/write",
+                   "Microsoft.Compute/disks/endGetAccess/action",
+                   "Microsoft.Compute/disks/beginGetAccess/action",
+                   "Microsoft.Compute/snapshots/read",
+                   "Microsoft.Compute/snapshots/write",
+                   "Microsoft.Compute/snapshots/delete",
+                   "Microsoft.Storage/storageAccounts/listkeys/action",
+                   "Microsoft.Storage/storageAccounts/regeneratekey/action",
+                   "Microsoft.Storage/storageAccounts/read",
+                   "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
+                   "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+                   "Microsoft.Storage/storageAccounts/blobServices/containers/write",
+                   "Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey/action"
+               ],
+               "DataActions": [
+                 "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
+                 "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+                 "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write",
+                 "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/move/action",
+                 "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/add/action"
+               ],
+               "AssignableScopes": ["/subscriptions/'"${AZURE_SUBSCRIPTION_ID}"'"]
+               }'
+        fi
+
+        AZURE_CLIENT_SECRET=$(az ad sp create-for-rbac --name "velero" --role "${AZURE_ROLE}" --query 'password' -o tsv --scopes /subscriptions/"${AZURE_SUBSCRIPTION_ID}")
+        AZURE_CLIENT_ID=$(az ad sp list --display-name "velero" --query '[0].appId' -o tsv)
+
+        ALL_VARIABLES="AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+        AZURE_TENANT_ID=${AZURE_TENANT_ID}
+        AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+        AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+        AZURE_RESOURCE_GROUP=${AZURE_RESOURCE_GROUP}
+        AZURE_CLOUD_NAME=AzurePublicCloud"
+
+        ALL_VARIABLES_BASE64=$(echo -n "${ALL_VARIABLES}" | base64)
+    fi
+
+
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.credentials.credentials_b64" "${ALL_VARIABLES_BASE64}" true
+
     package_helm_install "${K8S_PACKAGE_NAME}" "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_DIR}/files/helm-chart"
 
     argo_cd_application_wait "${K8S_PACKAGE_NAME}"
