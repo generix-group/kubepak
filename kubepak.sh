@@ -38,6 +38,7 @@ __opt_organization=""
 __opt_project=""
 __opt_context=""
 __opt_cilium_azure_resoure_group=""
+__opt_cilium_ipam_operator_cluster_pool_ipv4_pod_cidr_list=""
 __opt_packages=()
 __opt_packages_to_ignore=()
 __opt_kvp=()
@@ -196,6 +197,10 @@ __config_file_parse() {
         __opt_cilium_azure_resoure_group="$(yaml_read "${__opt_config_file}" ".ciliumAzureResoureGroup")"
     fi
 
+    if [[ -z "${__opt_cilium_ipam_operator_cluster_pool_ipv4_pod_cidr_list}" ]]; then
+        __opt_cilium_ipam_operator_cluster_pool_ipv4_pod_cidr_list="$(yaml_read "${__opt_config_file}" ".ciliumIpamOperatorClusterPoolIPv4PodCIDRList")"
+    fi
+
     mapfile -t __tmp < <(yaml_read "${__opt_config_file}" ".packages[]")
     if [[ -n "${__tmp[*]}" ]]; then
         __opt_packages=("${__tmp[@]}" "${__opt_packages[@]}")
@@ -282,6 +287,8 @@ __cache_init() {
     yaml_write "${CACHE_CWD}/values.yaml" ".organization" "${__opt_organization}"
     yaml_write "${CACHE_CWD}/values.yaml" ".project" "${__opt_project}"
     yaml_write "${CACHE_CWD}/values.yaml" ".context" "${__opt_context}"
+    yaml_write "${CACHE_CWD}/values.yaml" ".ciliumAzureResoureGroup" "${__opt_cilium_azure_resoure_group}"
+    yaml_write "${CACHE_CWD}/values.yaml" ".ciliumIpamOperatorClusterPoolIPv4PodCIDRList" "${__opt_cilium_ipam_operator_cluster_pool_ipv4_pod_cidr_list}"
 
     if [[ ,${CONTEXT}, =~ ,*-azure-database, ]]; then
         wget -q -O "${CACHE_CWD}/ca/DigiCertGlobalRootCA.crt" https://cacerts.digicert.com/DigiCertGlobalRootCA.crt
@@ -665,12 +672,17 @@ __handle_cilium() {
       resourceGroupOption=""
       if [ -n "${__opt_cilium_azure_resoure_group}" ]; then
         echo "Installing Cilium for Azure..."
-        resourceGroupOption="--set azure.resourceGroup=${__opt_cilium_azure_resoure_group}"
+        resourceGroupOption="--set aksbyocni.enabled=true --set nodeinit.enabled=true --set azure.resourceGroup=${__opt_cilium_azure_resoure_group}"
+      fi
+
+      ciliumIpamOperatorClusterPoolIPv4PodCIDRList=""
+      if [ -n "${__opt_cilium_ipam_operator_cluster_pool_ipv4_pod_cidr_list}" ]; then
+          ciliumIpamOperatorClusterPoolIPv4PodCIDRList="--set ipam.operator.clusterPoolIPv4PodCIDRList=${__opt_cilium_ipam_operator_cluster_pool_ipv4_pod_cidr_list}"
       fi
 
       kubectl create namespace shr-cilium --dry-run=client -o yaml | kubectl apply -f -
       # shellcheck disable=SC2086
-      cilium install --version "$version" --namespace="shr-cilium" $resourceGroupOption
+      cilium install --version "$version" --namespace="shr-cilium" --set kubeProxyReplacement=true $resourceGroupOption $ciliumIpamOperatorClusterPoolIPv4PodCIDRList
     else
       echo "Cilium already installed."
     fi

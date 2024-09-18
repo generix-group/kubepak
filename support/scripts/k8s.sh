@@ -269,6 +269,13 @@ k8s_resource_wait_for() {
     fi
 }
 
+k8s_rollout_restart(){
+    local namespace="$1"
+    local resource="$2"
+
+    kubectl -n "${namespace}" rollout restart "${resource}"
+}
+
 k8s_secret_create() {
     local __namespace="${1}"
     local __secret_name="${2}"

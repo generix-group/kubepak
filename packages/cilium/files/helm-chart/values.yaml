@@ -3,8 +3,17 @@ packages:
     image:
       repository:
       tag:
+    cluster:
+      id: 0
+      name:
     clustermesh:
       useAPIServer: false
+    ipam:
+      operator:
+        clusterPoolIPv4MaskSize: 24
+    k8sService:
+      host: "auto"
+      port: 443
     hubble:
       redact:
         enabled: false
