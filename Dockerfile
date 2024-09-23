@@ -38,7 +38,7 @@ SHELL ["/bin/bash", "-c"]
 # Prerequisites
 
 RUN apt-get update \
- && apt-get install -y curl git jq mysql-client openssh-client postgresql-client
+ && apt-get install -y curl gawk git jq mysql-client openssh-client postgresql-client
 
 ## awscli
 
