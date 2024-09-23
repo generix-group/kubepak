@@ -68,7 +68,8 @@ hook_install() {
         echo "Azure storage detected, creating backup credentials for Velero."
         # Create Secret
         AZURE_SUBSCRIPTION_ID=$(az account list --query '[?isDefault].id' -o tsv)
-        AZURE_ROLE=Velero
+        LOCATION="$(package_cache_values_file_read ".packages.azure-storage-backups.location" | sed 's/ //g')"
+        AZURE_ROLE=Velero${LOCATION}
         AZURE_TENANT_ID=$(az account list --query '[?isDefault].tenantId' -o tsv)
         AZURE_RESOURCE_GROUP=$(package_cache_values_file_read ".packages.azure-storage-backups.resourceGroupName")
 
