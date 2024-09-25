@@ -30,15 +30,23 @@ spec:
           value: "{{ .Values.packages.cilium.image.tag }}"
         {{- end }}
       values: |
+        {{- if not (eq .Values.ciliumAzureResoureGroup "") }}
         aksbyocni:
           enabled: true
-{{/*        cluster:*/}}
-{{/*          name: pataate*/}}
-{{/*          id: 0*/}}
+        azure:
+          resourceGroup: {{ .Values.ciliumAzureResoureGroup }}
+        nodeinit:
+          enabled: true
+        {{- end }}
+        cluster:
+          id: {{ .Values.packages.cilium.cluster.id }}
+          name: {{ .Values.packages.cilium.cluster.name }}
         ipam:
           operator:
-{{/*            clusterPoolIPv4PodCIDRList: []*/}}
-            clusterPoolIPv4MaskSize: 24
+            clusterPoolIPv4PodCIDRList: {{ .Values.ciliumIpamOperatorClusterPoolIPv4PodCIDRList }}
+            clusterPoolIPv4MaskSize: {{ .Values.packages.cilium.ipam.operator.clusterPoolIPv4MaskSize }}
+        k8sServiceHost: {{ .Values.packages.cilium.k8sService.host }}
+        k8sServicePort: {{ .Values.packages.cilium.k8sService.port }}
         envoy:
           enabled: true
         envoyConfig:
@@ -140,6 +148,26 @@ spec:
                 enabled: {{ include "common.context.contains" (merge (dict "value" "prometheus-metrics") .) }}
                 labels:
                   release: prometheus-stack
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: hubble-ca-cert
+      jsonPointers:
+        - /data/ca.crt
+    - group: ""
+      kind: Secret
+      name: hubble-relay-client-certs
+      jsonPointers:
+        - /data/ca.crt
+        - /data/tls.crt
+        - /data/tls.key
+    - group: ""
+      kind: Secret
+      name: hubble-server-certs
+      jsonPointers:
+        - /data/ca.crt
+        - /data/tls.crt
+        - /data/tls.key
   destination:
     server: {{ .Values.kubernetes.server }}
     namespace: {{ .Release.Namespace }}

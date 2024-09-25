@@ -39,6 +39,23 @@ readonly __CILIUM_CHART_VERSION="1.15.7"
 hook_initialize() {
     package_cache_values_file_write ".packages.${PACKAGE_IPATH}.chartVersion" "${__CILIUM_CHART_VERSION}"
 
+    local __cluster_name
+    __cluster_name=$(kubectl config current-context)
+
+    local __controlplane_url
+    # Substitution is needed due to the colorized output from kubectl: \x1B\[[0-9;]*m matches ANSI escape sequences.
+    __controlplane_full_url=$(kubectl cluster-info | awk -F/ '/Kubernetes control plane/ { gsub(/\x1B\[[0-9;]*m/, "", $NF); printf "%s", $NF }')
+
+    local __controlplane_host
+    __controlplane_host="${__controlplane_full_url%%:*}"
+
+    local __controlplane_port
+    __controlplane_port="${__controlplane_full_url##*:}"
+
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.cluster.name" "${__cluster_name}" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.k8sService.host" "${__controlplane_host}" true
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.k8sService.port" "${__controlplane_port}" true
+
     k8s_namespace_create "${K8S_PACKAGE_NAMESPACE}"
 
     registry_credentials_add_namespace "${K8S_PACKAGE_NAMESPACE}"
@@ -46,6 +63,9 @@ hook_initialize() {
 
 hook_install() {
     package_helm_install "${K8S_PACKAGE_NAME}" "${K8S_PACKAGE_NAMESPACE}" "${PACKAGE_DIR}/files/helm-chart"
+
+    #sleep to be sure configmap data is up-to-date before restart
+    sleep 15 && k8s_rollout_restart "${K8S_PACKAGE_NAMESPACE}" "deployment/cilium-operator"
 
     argo_cd_application_wait "${K8S_PACKAGE_NAME}"
 }
