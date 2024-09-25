@@ -666,7 +666,7 @@ __handle_cilium() {
       echo "Cilium-cli already installed."
     fi
 
-    if [[ "$(cilium status -n shr-cilium -o json 2>/dev/null | jq .'errors.cilium')" != null ]]; then
+    if [[ ! "$(cilium status -n shr-cilium -o json 2>/dev/null | jq .'errors.cilium')" != null ]]; then
       version=$(awk -F '=' '/__CILIUM_CHART_VERSION/{gsub(/"/, "", $2); print $2; exit}' packages/cilium/cilium.sh)
 
       resourceGroupOption=""

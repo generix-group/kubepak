@@ -156,6 +156,7 @@ spec:
               auto:
                 enabled: true
                 method: helm
+                certValidityDuration: 3650
           config:
             enabled: true
             clusters:
