@@ -1,0 +1,20 @@
+{{- if index .Values "packages" "azure-storage-backups" "lockLevel" }}
+---
+apiVersion: authorization.azure.upbound.io/v1beta1
+kind: ManagementLock
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  forProvider:
+    name: "crossplane-azure-provider-storage-backups"
+    lockLevel: {{ index .Values "packages" "azure-storage-backups" "lockLevel" }}
+    scope: {{ printf "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s" (index .Values "packages" "azure-storage-backups" "subscriptionId")  (index .Values "packages" "azure-storage-backups" "resourceGroupName") (printf "%s%s%s" .Values.organization .Values.project "backups") }}
+  providerConfigRef:
+    name: crossplane-azure-provider
+{{- end }}

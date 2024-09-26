@@ -1,0 +1,41 @@
+---
+apiVersion: storage.azure.upbound.io/v1beta1
+kind: Account
+metadata:
+  annotations:
+    crossplane.io/external-name: {{ .Values.organization }}{{ .Values.project }}backups
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+    StorageAccountName: {{ .Values.organization }}-backups
+  name: {{ .Values.organization }}-backups
+spec:
+  forProvider:
+    accountKind: {{ index .Values "packages" "azure-storage-backups" "accountKind" }}
+    accessTier: {{ index .Values "packages" "azure-storage-backups" "accessTier" }}
+    accountTier: {{ index .Values "packages" "azure-storage-backups" "accountTier" }}
+    accountReplicationType: {{ index .Values "packages" "azure-storage-backups" "accountReplicationType" }}
+    allowNestedItemsToBePublic: false
+    blobProperties:
+      - versioningEnabled: true
+    {{- if and (index .Values "packages" "azure-storage-backups" "identity" "identityIds") (index .Values "packages" "azure-storage-backups" "identity" "type") }}
+    identity:
+      - identityIds: {{ index .Values "packages" "azure-storage-backups" "identity" "identityIds"}}
+        type: {{ index .Values "packages" "azure-storage-backups" "identity" "type"}}
+    {{- end }}
+    infrastructureEncryptionEnabled: true
+    largeFileShareEnabled: true
+    location: "{{ index .Values "packages" "azure-storage-backups" "location"}}"
+    resourceGroupName: "{{ index .Values "packages" "azure-storage-backups" "resourceGroupName"}}"
+  providerConfigRef:
+    name: crossplane-azure-provider
+  writeConnectionSecretToRef:
+    name: azure-storage-backups-details
+    namespace: {{ .Release.Namespace }}
+    {{- if and (index .Values "packages" "azure-storage-backups" "writeConnectionSecretToRef" "tags" "key") (index .Values "packages" "azure-storage-backups" "writeConnectionSecretToRef" "tags" "value") }}
+    tags:
+      - key: {{ index .Values "packages" "azure-storage-backups" "writeConnectionSecretToRef" "tags" "key"}}
+        value: {{ index .Values "packages" "azure-storage-backups" "writeConnectionSecretToRef" "tags" "value"}}
+    {{- end }}

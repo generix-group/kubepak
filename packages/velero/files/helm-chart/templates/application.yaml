@@ -115,8 +115,8 @@ spec:
             {{- range .Values.packages.velero.configuration.backupStorageLocation }}
             - name: {{ required "configuration.backupStorageLocation.name is required" .name }}
               provider: {{ required "configuration.backupStorageLocation.provider is required" .provider }}
-              bucket: {{ required "configuration.backupStorageLocation.bucket is required" .bucket }}
-              prefix: {{ default $.Values.organization .prefix }}
+              bucket: {{ required "configuration.backupStorageLocation.bucketName is required" .bucketName }}
+              prefix: {{ default (printf "%s-%s" $.Values.organization $.Values.environment) .prefix }}
               {{- if eq .name "default" }}
               default: true
               {{- else }}
@@ -127,7 +127,7 @@ spec:
               {{- end }}
               config:
                 resourceGroup: {{ required "configuration.backupStorageLocation.resourceGroup is required" .resourceGroup }}
-                storageAccount: {{ required "configuration.backupStorageLocation.storageAccount is required" .storageAccount }}
+                storageAccount: {{ default (printf "%s%sbackups" $.Values.organization $.Values.project) .storageAccount }}
                 subscriptionId: {{ required "configuration.backupStorageLocation.subscriptionId is required" .subscriptionId }}
             {{- end }}
           {{- if index .Values.packages.velero.configuration.volumeSnapshotLocation 0 "name" }}
@@ -145,11 +145,13 @@ spec:
                 tags: {{ .tags }}
                 {{- end }}
             {{- end }}
+        snapshotsEnabled: true
+          {{- else }}
+        snapshotsEnabled: false
           {{- end }}
         credentials:
           existingSecret: {{ required "Secret is required for velero." .Values.packages.velero.credentials.secretName }}
         deployNodeAgent: true
-        snapshotsEnabled: true
   destination:
     server: {{ .Values.kubernetes.server }}
     namespace: {{ .Release.Namespace }}
