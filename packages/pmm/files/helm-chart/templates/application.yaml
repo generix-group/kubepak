@@ -1,0 +1,90 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}
+  namespace: shr-argo-cd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.environment }}-{{ .Values.organization }}-{{ .Values.project }}
+  source:
+    repoURL: https://percona.github.io/percona-helm-charts
+    targetRevision: {{ .Values.packages.pmm.chartVersion }}
+    chart: pmm
+    helm:
+      parameters:
+        - name: fullnameOverride
+          value: "{{ .Release.Name }}"
+        {{- if .Values.packages.pmm.image.repository }}
+        - name: image.repository
+          value: "{{ .Values.packages.pmm.image.repository }}"
+        {{- end }}
+        {{- if .Values.packages.pmm.image.tag }}
+        - name: image.tag
+          value: "{{ .Values.packages.pmm.image.tag }}"
+        {{- end }}
+        - name: service.type
+          value: ClusterIP
+        {{- if .Values.packages.pmm.ingress.enabled }}
+        - name: ingress.ingressClassName
+          value: {{ .Values.packages.pmm.ingress.ingressClassName | quote}}
+        - name: ingress.pathType
+          value: {{ .Values.packages.pmm.ingress.pathType }}
+        {{- end }}
+        - name: storage.name
+          value: "{{ .Release.Name }}-pmm-storage"
+        - name: storage.storageClassName
+          value: "{{ .Values.packages.pmm.storage.storageClassName }}"
+        - name: storage.size
+          value: "{{ .Values.packages.pmm.storage.size }}"
+        {{- if .Values.packages.pmm.serviceAccount.create }}
+        - name: serviceAccount.name
+          value: "{{ .Release.Name }}-pmm-sa"
+        {{- end }}  
+
+      values: |
+        resources:
+          {{- toYaml .Values.packages.pmm.pmmResources | nindent 10 }}
+        {{- if .Values.packages.pmm.ingress.enabled }}  
+        ingress:
+          annotations:
+            {{- toYaml .Values.packages.pmm.ingress.annotations | nindent 12 }}
+          community:
+            annotations: 
+              {{- toYaml .Values.packages.pmm.ingress.community.annotations | nindent 14 }}
+          hosts:  
+            {{- toYaml .Values.packages.pmm.ingress.hosts | nindent 12 }}
+          tls:
+            {{- toYaml .Values.packages.pmm.ingress.tls | nindent 12 }}
+        {{- end }}
+        {{- if .Values.packages.pmm.serviceAccount.create }}
+        serviceAccount:
+          annotations:
+            {{- toYaml .Values.packages.pmm.serviceAccount.annotations | nindent 12 }}
+        {{- end }}
+        podSecurityContext:
+          {{- toYaml .Values.packages.pmm.podSecurityContext | nindent 10 }}
+        podAnnotations:
+          {{- toYaml .Values.packages.pmm.podAnnotations | nindent 10 }}
+        securityContext:
+        {{- toYaml .Values.packages.pmm.securityContext | nindent 10 }}
+        nodeSelector:
+          {{- toYaml .Values.packages.pmm.nodeSelector | nindent 10 }}
+        tolerations:
+          {{- toYaml .Values.packages.pmm.tolerations | nindent 10 }}
+        affinity:
+          {{- toYaml .Values.packages.pmm.affinity | nindent 10 }}
+       
+  destination:
+    server: {{ .Values.kubernetes.server }}
+    namespace: {{ .Release.Namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

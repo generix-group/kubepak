@@ -1,0 +1,38 @@
+packages:
+  pmm: 
+    image:
+      repository: percona/pmm-server
+      pullPolicy: IfNotPresent
+      tag: "2.42.0"
+      imagePullSecrets: []
+    pmmResources: {}
+    secret:
+      name: ""
+      annotations: {}
+      create: true
+      pmm_password: ""
+    ingress:
+      enabled: true
+      annotations: {}
+      community:
+        annotations: {}
+      ingressClassName: ""
+      hosts:
+        - host: chart-example.local
+          paths: []
+      pathType: Prefix
+      tls: []
+    storage:
+      name: ""
+      storageClassName: ""
+      size: 12Gi
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
