@@ -1,0 +1,35 @@
+packages:
+  pmm: 
+    image:
+      repository: percona/pmm-server
+      pullPolicy: IfNotPresent
+      tag: "2.42.0"
+    pmmResources: {}
+    secret:
+      name: ""
+      annotations: {}
+      create: true
+      pmm_password: ""
+    ingress:
+      enabled: true
+      annotations: {}
+      community:
+        annotations: {}
+      ingressClassName: ""
+      hosts: []
+      pathType: Prefix
+      tls: []
+    storage:
+      name: ""
+      storageClassName: ""
+      size: 10Gi
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
