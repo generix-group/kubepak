@@ -2,11 +2,13 @@ packages:
   vault:
     auth:
       oidc:
+        allowedRedirectUris:
         clientId:
         clientSecret:
         discoveryUrl:
-        enabled:
-        oidcScopes:
+        enabled: false
+        oidcScopes: []
+        policies: []
         roles: []
     ha:
       enabled: true
@@ -29,6 +31,12 @@ packages:
         dbname:
         host:
         ha_enabled:
+    pki:
+      bootstrapIntermediatesCa: false
+      bootstrapRootCa: false
+      enabled: false
+      rootCa: {}
+      intermediatesCA: []
     tls:
       ca:
         srcFilePath:

@@ -252,42 +252,16 @@ path "sys/metrics" {
 EOF
 
     k8s_secret_create "${K8S_PACKAGE_NAMESPACE}" "${K8S_PACKAGE_NAME}-metrics-client" "opaque" '{
-          "token": "'"$(vault token create -policy=metrics -field=token | base64 -w0)"'",
-        }'
+      "token": "'"$(vault token create -policy=metrics -field=token | base64 -w0)"'",
+    }'
 
-    ### TODO: NEED ANOTHER BRAIN
-    if [ "$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.auth.oidc.enabled")" = true ]; then
-        if ! vault auth list -format json | jq -e '.["oidc/"]' >/dev/null; then
-            vault auth enable oidc
+    if [ "$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.auth.oidc.enabled")" = true ] || [ "$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.pki.enabled")" = true ]; then
+        [[ $(uname -m) == x86_64 ]] && vault_configurator_arch=amd64 || vault_configurator_arch=arm64
+        if [ ! -x "${PWD}/${ORGANIZATION}-tools/vault-configurator/target/linux_${vault_configurator_arch}/vault-configurator" ]; then
+            make -C "${PWD}/${ORGANIZATION}-tools/vault-configurator" production/kubepak
         fi
-
-        vault write auth/oidc/config oidc_client_id="$(package_cache_values_file_read ".packages.${PACKAGE_NAME}.auth.oidc.clientId")" \
-            oidc_client_secret="$(package_cache_values_file_read ".packages.${PACKAGE_NAME}.auth.oidc.clientSecret")" \
-            oidc_discovery_url="$(package_cache_values_file_read ".packages.${PACKAGE_NAME}.auth.oidc.discoveryUrl")"
-
-        local __i
-         for __i in $(seq "$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.auth.oidc.roles")"); do
-             local __role_name
-             __role_name="$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.auth.oidc.roles[$((__i - 1))].name")"
-
-             local __role_group_name
-             __role_groupname="$(package_cache_values_file_read ".packages.${PACKAGE_IPATH}.auth.oidc.roles[$((__i - 1))].groupname")"
-
-            vault write auth/oidc/role/"${__role_name}" user_claim="sub" \
-                allowed_redirect_uris="http://localhost:8250/oidc/callback" \
-                allowed_redirect_uris="$(package_cache_values_file_read ".packages.${PACKAGE_NAME}.vault.ingress.host")/ui/vault/auth/oidc/oidc/callback" \
-                token_no_default_policy=true groups_claim="groups" oidc_scopes="$(package_cache_values_file_read ".packages.${PACKAGE_NAME}.auth.oidc.oidcScopes")"
-            local VAULT_GROUP_ID
-            VAULT_GROUP_ID=$(vault write -field=id -format=table identity/group name="${__role_groupname}" type="external" policies="${__role_name}")
-
-            local VAULT_OIDC_ACCESSOR_ID
-            VAULT_OIDC_ACCESSOR_ID=$(vault auth list -format=json | jq -r '."oidc/".accessor')
-
-            local ENTRA_ID_GROUP_ID
-            ENTRA_ID_GROUP_ID=$(az ad group show --group "${__role_groupname}" | jq .id -r)
-
-            vault write identity/group-alias name="${ENTRA_ID_GROUP_ID}" mount_accessor="${VAULT_OIDC_ACCESSOR_ID}" canonical_id="${VAULT_GROUP_ID}"
-        done
+        package_cache_values_file_read ".packages.${PACKAGE_IPATH}" >vault.yaml
+        "${PWD}/genx-tools/vault-configurator/target/linux_${vault_configurator_arch}/vault-configurator" all && rm vault.yaml
     fi
 }
 
