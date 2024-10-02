@@ -14,8 +14,6 @@ PMM is an open source database monitoring, observability and management tool.
 | `pmm.image.repository`                   | PMM image repository                                                                                                                                                                                                                          | `percona/pmm-server` |
 | `pmm.image.pullPolicy`                   | PMM image pull policy                                                                                                                                                                                                                         | `IfNotPresent`       |
 | `pmm.image.tag`                          | PMM image tag (immutable tags are recommended)                                                                                                                                                                                                | `2.42.0`             |
-| `pmm.image.imagePullSecrets`             | Global Docker registry secret names as an array                                                                                                                                                                                               | `[]`                 |
-| `pmm.pmmEnv.DISABLE_UPDATES`             | Disables a periodic check for new PMM versions as well as ability to apply upgrades using the UI (need to be disabled in k8s environment as updates rolled with helm/container update)                                                        | `1`                  |
 | `pmm.pmmResources`                       | optional [Resources](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) requested for [PMM container](https://docs.percona.com/percona-monitoring-and-management/setting-up/server/index.html#set-up-pmm-server) | `{}`                 |
                                                                                                                                                            | `6`                  |
 
@@ -38,8 +36,7 @@ PMM is an open source database monitoring, observability and management tool.
 | `pmm.ingress.annotations`             | -- Ingress annotations configuration                                                                                                           | `{}`                  |
 | `pmm.ingress.community.annotations`   | -- Ingress annotations configuration for community managed ingress (nginxInc = false)                                                          | `{}`                  |
 | `pmm.ingress.ingressClassName`        | -- Sets the ingress controller class name to use.                                                                                              | `""`                  |
-| `pmm.ingress.hosts[0].host`           | hostname                                                                                                                                       | ` ` |
-| `pmm.ingress.hosts[0].paths`          | path mapping                                                                                                                                   | `[]`                  |
+| `pmm.ingress.hosts`           | hostname and mapping config                                                                                                                                             | ` []` |
 | `pmm.ingress.pathType`                | -- How ingress paths should be treated.                                                                                                        | `Prefix`              |
 | `pmm.ingress.tls`                     | -- Ingress TLS configuration                                                                                                                   | `[]`                  |
 
@@ -51,8 +48,6 @@ PMM is an open source database monitoring, observability and management tool.
 | `pmm.storage.name`             | name of PVC                                                                                                                                                                             | ` ` |
 | `pmm.storage.storageClassName` | optional PMM data Persistent Volume Storage Class                                                                                                                                       | `""`          |
 | `pmm.storage.size`             | size of storage on number of monitored services and data retention | `10Gi`        |
-| `pmm.storage.dataSource`       | VolumeSnapshot to start from                                                                                                                                                            | `{}`          |
-| `pmm.storage.selector`         | select existing PersistentVolume                                                                                                                                                        | `{}`          |
 
 
 ### PMM kubernetes configurations

@@ -4,7 +4,6 @@ packages:
       repository: percona/pmm-server
       pullPolicy: IfNotPresent
       tag: "2.42.0"
-      imagePullSecrets: []
     pmmResources: {}
     secret:
       name: ""
@@ -23,7 +22,7 @@ packages:
     storage:
       name: ""
       storageClassName: ""
-      size: 12Gi
+      size: 10Gi
     serviceAccount:
       create: true
       annotations: {}
