@@ -9,60 +9,59 @@ PMM is an open source database monitoring, observability and management tool.
 
 ### Percona Monitoring and Management (PMM) parameters
 
-| Name                                 | Description                                                                                                                                                                                                                                   | Value                |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |----------------------|
-| `pmm.image.repository`                   | PMM image repository                                                                                                                                                                                                                          | `percona/pmm-server` |
-| `pmm.image.pullPolicy`                   | PMM image pull policy                                                                                                                                                                                                                         | `IfNotPresent`       |
-| `pmm.image.tag`                          | PMM image tag (immutable tags are recommended)                                                                                                                                                                                                | `2.42.0`             |
-| `pmm.pmmResources`                       | optional [Resources](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) requested for [PMM container](https://docs.percona.com/percona-monitoring-and-management/setting-up/server/index.html#set-up-pmm-server) | `{}`                 |
+| Name                                 | Type        |  Default               | Description                                                                                                                                                                                                                                   |                 
+| ------------------------------------ | ----------- | ---------------------- |  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pmm.image.repository`               |  string     |  `percona/pmm-server`  | PMM image repository                                                                                                                                                                                                                         
+| `pmm.image.pullPolicy`               |  string     |  `IfNotPresent`        | PMM image pull policy                                                                                                                                                                                                                         |  
+| `pmm.image.tag`                      |  string     |  `2.42.0`              | PMM image tag (immutable tags are recommended)                                                                                                                                                                                                | 
+| `pmm.pmmResources`                   |  object     |  `{}`                  | optional [Resources](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) requested for [PMM container](https://docs.percona.com/percona-monitoring-and-management/setting-up/server/index.html#set-up-pmm-server) | 
                                                                                                                                                            | `6`                  |
 
 ### PMM secrets
 
-| Name                  | Description                                                                                                                                                                        | Value        |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| `pmm.secret.name`         | Defines the name of the k8s secret that holds passwords and other secrets                                                                                                          | ` ` |
-| `pmm.secret.annotations`  | Defines the annotations of the k8s secret that holds passwords and other secrets                                                                                                   | `{}`         |
-| `pmm.secret.create`       | If true then secret will be generated by Helm chart. Otherwise it is expected to be created by user.                                                                               | `true`       |
-| `pmm.secret.pmm_password` | Initial PMM password - it changes only on the first deployment, ignored if PMM was already provisioned and just restarted. If PMM admin password is not set, it will be generated. | `""`         |
-| `pmm.certs`               | Optional certificates, if not provided PMM would use generated self-signed certificates,                                                                                           | `{}`         |
+| Name                      |     Type     |  Default   | Description                                                                                                                                                                        |
+| ------------------------- | ------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pmm.secret.name`         |  string      |   ` `      | Defines the name of the k8s secret that holds passwords and other secrets                                                                                                          | 
+| `pmm.secret.annotations`  |  object      |   `{}`     | Defines the annotations of the k8s secret that holds passwords and other secrets                                                                                                   |
+| `pmm.secret.create`       |  boolean     |   `true`   | If true then secret will be generated by Helm chart. Otherwise it is expected to be created by user.                                                                               | 
+| `pmm.secret.pmm_password` |  string      |   `""`     | Initial PMM password - it changes only on the first deployment, ignored if PMM was already provisioned and just restarted. If PMM admin password is not set, it will be generated. |
+| `pmm.certs`               |  object      |   `{}`     | Optional certificates, if not provided PMM would use generated self-signed certificates,                                                                                           | 
 
 
-### PMM network configuration
+### PMM network configuration| 
 
-| Name                              | Description                                                                                                                                    | Value                 |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `pmm.ingress.enabled`                 | -- Enable ingress controller resource                                                                                                          | `false`               |
-| `pmm.ingress.annotations`             | -- Ingress annotations configuration                                                                                                           | `{}`                  |
-| `pmm.ingress.community.annotations`   | -- Ingress annotations configuration for community managed ingress (nginxInc = false)                                                          | `{}`                  |
-| `pmm.ingress.ingressClassName`        | -- Sets the ingress controller class name to use.                                                                                              | `""`                  |
-| `pmm.ingress.hosts`           | hostname and mapping config                                                                                                                                             | ` []` |
-| `pmm.ingress.pathType`                | -- How ingress paths should be treated.                                                                                                        | `Prefix`              |
-| `pmm.ingress.tls`                     | -- Ingress TLS configuration                                                                                                                   | `[]`                  |
+| Name                                  |     Type              | Default     |Description                                                                                                                                                   |
+| ------------------------------------- | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pmm.ingress.enabled`                 |  boolean              |  `false`    |  -- Enable ingress controller resource                                                                                               | `false`               |
+| `pmm.ingress.annotations`             |  object               |  `{}`       |  -- Ingress annotations configuration                                                                                                | `{}`                  |
+| `pmm.ingress.community.annotations`   |  object               |  `{}`       |  -- Ingress annotations configuration for community managed ingress (nginxInc = false)                                               | `{}`                  |
+| `pmm.ingress.ingressClassName`        |  string               |  `""`       |  -- Sets the ingress controller class name to use.                                                                                   | `""`                  |
+| `pmm.ingress.hosts`                   |  list                 |  `[]`       |  hostname and mapping config                                                                                                         | ` []`                 |
+| `pmm.ingress.pathType`                |  string               |  `Prefix`   |  -- How ingress paths should be treated.                                                                                             | `Prefix`              |
+| `pmm.ingress.tls`                     |  list                 |  `[]`       |  -- Ingress TLS configuration                                                                                                        | `[]`                  |
 
 
 ### PMM storage configuration
 
-| Name                       | Description                                                                                                                                                                             | Value         |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `pmm.storage.name`             | name of PVC                                                                                                                                                                             | ` ` |
-| `pmm.storage.storageClassName` | optional PMM data Persistent Volume Storage Class                                                                                                                                       | `""`          |
-| `pmm.storage.size`             | size of storage on number of monitored services and data retention | `10Gi`        |
+| Name                          |    Type     | Default  | Description                                                                                                                                                                       | 
+| ----------------------------- | ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pmm.storage.name`            |   string    |   ` `    | name of PVC                                                                                                                                                                       | 
+| `pmm.storage.storageClassName`|   string    |  `""`    | optional PMM data Persistent Volume Storage Class                                                                                                                                 | 
+| `pmm.storage.size`            |   string    |  `10Gi`  | size of storage on number of monitored services and data retention                                                                                                                |
 
 
-### PMM kubernetes configurations
-
-| Name                         | Description                                                                                                         | Value                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `pmm.serviceAccount.create`      | Specifies whether a ServiceAccount should be created                                                                | `true`                |
-| `pmm.serviceAccount.annotations` | Annotations for service account. Evaluated as a template. Only used if `create` is `true`.                          | `{}`                  |
-| `pmm.serviceAccount.name`        | Name of the service account to use. If not set and create is true, a name is generated using the fullname template. | ` `                   |
-| `pmm.podAnnotations`             | Pod annotations                                                                                                     | `{}`                  |
-| `pmm.podSecurityContext`         | Configure Pods Security Context                                                                                     | `{}`                  |
-| `pmm.securityContext`            | Configure Container Security Context                                                                                | `{}`                  |
-| `pmm.nodeSelector`               | Node labels for pod assignment                                                                                      | `{}`                  |
-| `pmm.tolerations`                | Tolerations for pod assignment                                                                                      | `[]`                  |
-| `pmm.affinity`                   | Affinity for pod assignment                                                                                         | `{}`                  |
+### PMM kubernetes configuration
+| Name                             |    Type     | Default  | Description                                                                                                                                                                     | 
+| -------------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pmm.serviceAccount.create`      |   boolean   |  `true`  |Specifies whether a ServiceAccount should be created                                                                                                                             |
+| `pmm.serviceAccount.annotations` |   object    |  `{}`    |Annotations for service account. Evaluated as a template. Only used if `create` is `true`.                                                                                       |
+| `pmm.serviceAccount.name`        |   string    |  ` `     |Name of the service account to use. If not set and create is true, a name is generated using the fullname template.                                                              |
+| `pmm.podAnnotations`             |   object    |  `{}`    |Pod annotations                                                                                                                                                                  |
+| `pmm.podSecurityContext`         |   object    |  `{}`    |Configure Pods Security Context                                                                                                                                                  |
+| `pmm.securityContext`            |   object    |  `{}`    |Configure Container Security Context                                                                                                                                             |
+| `pmm.nodeSelector`               |   object    |  `{}`     |Node labels for pod assignment                                                                                                                                                  |
+| `pmm.tolerations`                |   object    |  `{}`    |Tolerations for pod assignment                                                                                                                                                   |
+| `pmm.affinity`                   |   object    |  `{}`    |Affinity for pod assignment                                                                                                                                                      |
 
 
 
