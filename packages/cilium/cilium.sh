@@ -56,6 +56,8 @@ hook_initialize() {
     package_cache_values_file_write ".packages.${PACKAGE_IPATH}.k8sService.host" "${__controlplane_host}" true
     package_cache_values_file_write ".packages.${PACKAGE_IPATH}.k8sService.port" "${__controlplane_port}" true
 
+    package_cache_values_file_write ".packages.${PACKAGE_IPATH}.cluster.id" "$(./tools/ciliumHelper/ciliumHelper getNextId)" true
+
     k8s_namespace_create "${K8S_PACKAGE_NAMESPACE}"
 
     registry_credentials_add_namespace "${K8S_PACKAGE_NAMESPACE}"

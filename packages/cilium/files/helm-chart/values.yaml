@@ -8,6 +8,13 @@ packages:
       name:
     clustermesh:
       useAPIServer: false
+      config:
+        enabled: false
+        clusters: []
+    tls:
+      ca:
+        cert:
+        key:
     ipam:
       operator:
         clusterPoolIPv4MaskSize: 24
