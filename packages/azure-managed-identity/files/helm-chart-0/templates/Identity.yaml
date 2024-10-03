@@ -1,0 +1,17 @@
+---
+apiVersion: managedidentity.azure.upbound.io/v1beta1
+kind: UserAssignedIdentity
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ .Values.organization }}.{{ .Values.project }}
+    app.kubernetes.io/managed-by: kubepak
+  name: {{ .Release.Name }}-{{ .Values.environment }}
+spec:
+  forProvider:
+    location: {{ index .Values "packages" "azure-managed-identity" "location"}}
+    name: {{ .Release.Name }}-{{ .Values.environment }}
+    resourceGroupName: {{ index .Values "packages" "azure-managed-identity" "resourceGroupName"}}
+  providerConfigRef:
+    name: crossplane-azure-provider
